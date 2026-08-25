@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 1 Progress — Portfolio Site</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fafafa;
+    padding: 2rem;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #666; margin-bottom: 1.5rem; }
+  .status-badge {
+    display: inline-block;
+    background: #16a34a;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+  ul.checklist { list-style: none; }
+  ul.checklist li {
+    padding: 0.35rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  ul.checklist li::before {
+    content: "✓";
+    color: #16a34a;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+  .meta-item .label {
+    font-size: 0.8rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .meta-item .value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 0.15rem;
+  }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .live-link {
+    display: inline-block;
+    background: #1a1a1a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+  .live-link:hover { background: #333; text-decoration: none; }
+  .concept-list { list-style: none; }
+  .concept-list li {
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .concept-list li:last-child { border-bottom: none; }
+  .quiz-item { margin-bottom: 0.9rem; }
+  .quiz-item .q { font-weight: 600; }
+  .quiz-item .a { color: #555; margin-top: 0.15rem; }
+  footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Project 1: Personal Portfolio Site</h1>
+  <p class="subtitle">Web &amp; App Dev Mentor Track — status tracker</p>
+  <span class="status-badge">✓ Complete &amp; Deployed</span>
+
+  <div class="card">
+    <h2>At a glance</h2>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="label">Days spent</div>
+        <div class="value">1 / 1–2 budget</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Started</div>
+        <div class="value">2026-08-25</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Completed</div>
+        <div class="value">2026-08-25</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Stack</div>
+        <div class="value">HTML / CSS / JS</div>
+      </div>
+    </div>
+    <a class="live-link" href="https://web-app-dev-mentor-projec1.vercel.app/" target="_blank">Visit Live Site →</a>
+  </div>
+
+  <div class="card">
+    <h2>Build checklist</h2>
+    <ul class="checklist">
+      <li>index.html — semantic structure (header/nav, hero, about, projects, contact, footer)</li>
+      <li>styles.css — reset, flexbox nav layout, responsive media query</li>
+      <li>script.js — mobile hamburger menu (DOM selection + event listener)</li>
+      <li>Content personalized with real name/bio/contact info</li>
+      <li>Local smoke test — verified in browser incl. mobile-width view</li>
+      <li>Git repo initialized, combined GitHub repo created (claudegyanyaan-ai/web-app-dev-mentor)</li>
+      <li>.claude/ tooling added: code-explainer subagent + post-commit push-reminder hook</li>
+      <li>Deployed to Vercel (free tier), root directory scoped to project-1-portfolio</li>
+      <li>Live URL verified externally (not just localhost)</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Concepts introduced</h2>
+    <p style="margin-bottom:0.75rem; color:#555;">Full plain-English explanations in <a href="CONCEPTS.md">CONCEPTS.md</a>. Summary:</p>
+    <ul class="concept-list">
+      <li>DOCTYPE, head vs body, viewport meta tag</li>
+      <li>Linking external CSS/JS; why scripts load at the end of body</li>
+      <li>Semantic HTML tags (header/nav/main/section/footer) vs generic divs</li>
+      <li>Anchor-link navigation as zero-JS client-side routing</li>
+      <li>CSS reset, Flexbox layout, media queries (mobile-responsive design)</li>
+      <li>DOM selection (querySelector), events (addEventListener), classList.toggle</li>
+      <li>Browser DevTools: Network tab for diagnosing missing/broken linked files</li>
+      <li>Static hosting, HTTPS-by-default, free-tier deploy via Vercel + GitHub integration</li>
+      <li>Git basics: init, add, commit, push, remote; why rewriting pushed history is risky</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Checkpoint quiz</h2>
+    <div class="quiz-item">
+      <div class="q">1. Why does script.js get linked at the end of &lt;body&gt; instead of in &lt;head&gt;?</div>
+    </div>
+    <div class="quiz-item">
+      <div class="q">2. What's the difference between what HTML is responsible for vs. what CSS is responsible for?</div>
+    </div>
+    <div class="quiz-item">
+      <div class="q">3. Why did the site keep showing unstyled even after saving styles.css — what was actually broken?</div>
+    </div>
+    <div class="quiz-item">
+      <div class="q">4. What does the @media (max-width: 600px) rule actually do, and why did nothing change at normal browser width?</div>
+    </div>
+    <div class="quiz-item">
+      <div class="q">5. Why did we set "Root Directory" to project-1-portfolio in Vercel instead of deploying the whole repo?</div>
+    </div>
+    <p style="color:#888; font-size:0.9rem; margin-top:0.5rem;">Answered verbally in the mentoring session — see debrief.</p>
+  </div>
+
+  <div class="card">
+    <h2>What you could break/change next</h2>
+    <ul class="checklist">
+      <li>Add a real project card (or several) once you've built Project 2+</li>
+      <li>Try changing the color scheme in styles.css and see what breaks vs. what's safe to edit</li>
+      <li>Add a second page (e.g. a resume/CV page) and link to it from the nav</li>
+      <li>Try resizing the browser to exactly 601px vs 599px and see the hamburger menu snap in/out</li>
+    </ul>
+  </div>
+
+  <footer>Web &amp; App Dev Mentor Track · Project 1 of 10 · Last updated 2026-08-25</footer>
+</div>
+</body>
+</html>

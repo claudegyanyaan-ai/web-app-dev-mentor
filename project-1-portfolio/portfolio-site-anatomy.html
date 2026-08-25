@@ -1,0 +1,624 @@
+<title>Portfolio Site Anatomy</title>
+<style>
+  :root {
+    --bg: #f5f7f5;
+    --surface: #ffffff;
+    --surface-2: #eef1ee;
+    --text: #1b2430;
+    --text-muted: #5b6472;
+    --text-faint: #8b95a1;
+    --accent: #2a6f6f;
+    --accent-strong: #1d5252;
+    --accent-soft: #dceeee;
+    --border: #e0e4e1;
+    --code-bg: #101619;
+    --code-text: #d9e2e6;
+    --code-accent: #7fd4c9;
+    --good: #2f7d4f;
+    --shadow: 0 1px 2px rgba(20,30,30,0.04), 0 8px 24px rgba(20,30,30,0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151a;
+      --surface: #171e24;
+      --surface-2: #1d252c;
+      --text: #e7ebee;
+      --text-muted: #98a4af;
+      --text-faint: #6b7783;
+      --accent: #5fc9c0;
+      --accent-strong: #86ddd4;
+      --accent-soft: rgba(95,201,192,0.14);
+      --border: #283139;
+      --code-bg: #0b0f12;
+      --code-text: #dbe6ea;
+      --code-accent: #7fd4c9;
+      --good: #6bc98e;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151a;
+    --surface: #171e24;
+    --surface-2: #1d252c;
+    --text: #e7ebee;
+    --text-muted: #98a4af;
+    --text-faint: #6b7783;
+    --accent: #5fc9c0;
+    --accent-strong: #86ddd4;
+    --accent-soft: rgba(95,201,192,0.14);
+    --border: #283139;
+    --code-bg: #0b0f12;
+    --code-text: #dbe6ea;
+    --code-accent: #7fd4c9;
+    --good: #6bc98e;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-strong); }
+
+  h1, h2, h3 {
+    font-family: "IBM Plex Serif", Georgia, serif;
+    text-wrap: balance;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  code, .mono, .cmd-line, .cmd-block {
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+
+  /* ---------- Shell layout ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 2.5rem 1.5rem 2.5rem 2rem;
+    border-right: 1px solid var(--border);
+  }
+  @media (max-width: 880px) {
+    .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 1.75rem 1.5rem 1.25rem; }
+  }
+  .sidebar-eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.4rem;
+  }
+  .sidebar-title {
+    font-family: "IBM Plex Serif", serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.75rem;
+    line-height: 1.3;
+  }
+  .toc { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+  .toc a {
+    display: block;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.88rem;
+  }
+  .toc a:hover { background: var(--surface-2); color: var(--text); }
+  .toc .num { color: var(--text-faint); font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; margin-right: 0.5rem; }
+
+  .sidebar-status {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--good);
+    background: var(--accent-soft);
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+  }
+  .status-pill::before { content: "●"; font-size: 0.6rem; }
+  .sidebar-link {
+    display: block;
+    margin-top: 0.85rem;
+    font-size: 0.85rem;
+    word-break: break-word;
+  }
+
+  /* ---------- Main column ---------- */
+  main { padding: 3.25rem 2.5rem 6rem; min-width: 0; }
+  @media (max-width: 880px) { main { padding: 2rem 1.25rem 4rem; } }
+
+  .doc-header { max-width: 640px; margin-bottom: 3.25rem; }
+  .doc-eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    font-weight: 600;
+    margin-bottom: 0.9rem;
+  }
+  h1.doc-title { font-size: 2.1rem; line-height: 1.2; margin: 0 0 0.9rem; }
+  .doc-dek { color: var(--text-muted); font-size: 1.05rem; max-width: 58ch; }
+
+  section { max-width: 720px; margin-bottom: 3.5rem; scroll-margin-top: 2rem; }
+  section > h2 {
+    font-size: 1.4rem;
+    margin: 0 0 0.35rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  section > h2 .section-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  section > .section-intro { color: var(--text-muted); margin-bottom: 1.4rem; max-width: 62ch; }
+
+  p { margin: 0 0 1rem; max-width: 68ch; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ---------- Pipeline ---------- */
+  .pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+  }
+  .pipe-step {
+    flex: 1 1 130px;
+    padding: 1.1rem 1.1rem;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .pipe-step:last-child { border-right: none; }
+  .pipe-step .pipe-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+  .pipe-step .pipe-label { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.25rem; }
+  .pipe-step .pipe-sub { color: var(--text-muted); font-size: 0.78rem; }
+  @media (max-width: 620px) {
+    .pipeline { flex-direction: column; }
+    .pipe-step { border-right: none; border-bottom: 1px solid var(--border); }
+    .pipe-step:last-child { border-bottom: none; }
+  }
+
+  /* ---------- Compare cards (page vs website) ---------- */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0 1rem;
+  }
+  @media (max-width: 620px) { .compare { grid-template-columns: 1fr; } }
+  .compare-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.15rem 1.25rem;
+    background: var(--surface);
+  }
+  .compare-card.is-this-project { border-color: var(--accent); background: var(--accent-soft); }
+  .compare-card h3 { font-size: 0.98rem; margin: 0 0 0.5rem; font-family: "IBM Plex Sans", sans-serif; font-weight: 700; }
+  .compare-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0; max-width: none; }
+  .compare-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    margin-bottom: 0.4rem;
+  }
+
+  /* ---------- Aspect grid ---------- */
+  .aspect-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 620px) { .aspect-grid { grid-template-columns: 1fr; } }
+  .aspect-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+    background: var(--surface);
+  }
+  .aspect-card h3 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-strong);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 0 0 0.65rem;
+  }
+  .aspect-card ul { margin: 0; padding-left: 1.1rem; color: var(--text-muted); font-size: 0.92rem; }
+  .aspect-card li { margin-bottom: 0.35rem; }
+  .aspect-card li:last-child { margin-bottom: 0; }
+  .aspect-card li b { color: var(--text); font-weight: 600; }
+
+  /* ---------- Deployment flow ---------- */
+  .deploy-flow {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 1.5rem 1.6rem;
+    margin: 1.5rem 0;
+  }
+  .deploy-row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.65rem 0;
+  }
+  .deploy-row:not(:last-child) { border-bottom: 1px dashed var(--border); }
+  .deploy-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .deploy-text b { display: block; font-size: 0.95rem; }
+  .deploy-text span { color: var(--text-muted); font-size: 0.85rem; }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--surface-2);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 1.2rem;
+  }
+  .callout b { color: var(--text); }
+
+  /* ---------- Commands reference ---------- */
+  .cmd-group { margin-bottom: 1.5rem; }
+  .cmd-group:last-child { margin-bottom: 0; }
+  .cmd-group h3 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 0 0 0.6rem;
+  }
+  .cmd-block {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+    font-size: 0.86rem;
+    line-height: 1.9;
+    overflow-x: auto;
+  }
+  .cmd-line { display: block; white-space: pre; }
+  .cmd-line .prompt { color: var(--text-faint); }
+  .cmd-line .comment { color: var(--text-faint); font-style: italic; }
+  .cmd-block .cmd { color: var(--code-accent); }
+
+  /* ---------- Steps timeline ---------- */
+  .timeline { list-style: none; margin: 1.5rem 0 0; padding: 0; counter-reset: step; }
+  .timeline li {
+    counter-increment: step;
+    position: relative;
+    padding: 0 0 1.4rem 2.4rem;
+    border-left: 2px solid var(--border);
+    margin-left: 0.6rem;
+  }
+  .timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .timeline li::before {
+    content: counter(step);
+    position: absolute;
+    left: -0.85rem;
+    top: -0.1rem;
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    color: var(--accent-strong);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .timeline b { display: block; font-size: 0.96rem; margin-bottom: 0.15rem; }
+  .timeline span { color: var(--text-muted); font-size: 0.87rem; }
+
+  footer.doc-footer {
+    max-width: 720px;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-faint);
+    font-size: 0.82rem;
+  }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-eyebrow">Web &amp; App Dev Mentor · Project 1</div>
+    <div class="sidebar-title">Portfolio Site Anatomy</div>
+    <ul class="toc">
+      <li><a href="#flow"><span class="num">01</span>The Flow</a></li>
+      <li><a href="#html"><span class="num">02</span>What HTML Is</a></li>
+      <li><a href="#page-vs-site"><span class="num">03</span>Page vs. Website</a></li>
+      <li><a href="#aspects"><span class="num">04</span>What This Project Covered</a></li>
+      <li><a href="#deployment"><span class="num">05</span>How Deployment Works</a></li>
+      <li><a href="#commands"><span class="num">06</span>Commands Reference</a></li>
+      <li><a href="#steps"><span class="num">07</span>Steps We Actually Took</a></li>
+    </ul>
+    <div class="sidebar-status">
+      <span class="status-pill">Live &amp; deployed</span>
+      <a class="sidebar-link" href="https://web-app-dev-mentor-projec1.vercel.app/" target="_blank">web-app-dev-mentor-projec1.vercel.app →</a>
+      <a class="sidebar-link" href="https://github.com/claudegyanyaan-ai/web-app-dev-mentor" target="_blank">GitHub repo →</a>
+    </div>
+  </aside>
+
+  <main>
+    <div class="doc-header">
+      <div class="doc-eyebrow">Debrief · Project 1 of 10</div>
+      <h1 class="doc-title">How a folder of text files became a live website</h1>
+      <p class="doc-dek">A recap of what we actually built, why HTML/CSS/JS split the way they did, and how the code on your laptop ended up reachable from anywhere in the world.</p>
+    </div>
+
+    <section id="flow">
+      <h2><span class="section-num">01</span>The flow, end to end</h2>
+      <p class="section-intro">Six stages, each handing off to the next. Nothing here was optional — skip a stage and the next one has nothing to work with.</p>
+      <div class="pipeline">
+        <div class="pipe-step">
+          <div class="pipe-num">1</div>
+          <div class="pipe-label">HTML</div>
+          <div class="pipe-sub">Structure &amp; content</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">2</div>
+          <div class="pipe-label">CSS</div>
+          <div class="pipe-sub">Appearance &amp; layout</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">3</div>
+          <div class="pipe-label">JavaScript</div>
+          <div class="pipe-sub">Behavior on click/tap</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">4</div>
+          <div class="pipe-label">Git</div>
+          <div class="pipe-sub">Local version history</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">5</div>
+          <div class="pipe-label">GitHub</div>
+          <div class="pipe-sub">Hosted copy of history</div>
+        </div>
+        <div class="pipe-step">
+          <div class="pipe-num">6</div>
+          <div class="pipe-label">Vercel</div>
+          <div class="pipe-sub">Serves it to the world</div>
+        </div>
+      </div>
+      <p>Nothing in this chain is Portfolio-specific — this exact six-stage flow is what every one of the next 9 projects will follow too, just with more stages bolted onto the middle (a database, an API, authentication). Project 1 was deliberately the version with nothing extra, so the shape of the pipeline itself would be visible.</p>
+    </section>
+
+    <section id="html">
+      <h2><span class="section-num">02</span>What HTML actually is</h2>
+      <p class="section-intro">HTML (HyperText Markup Language) is not a programming language — it has no logic, no calculations, no "if this then that." It's a <b>markup</b> language: it wraps content in tags that say what each piece of content <i>is</i>.</p>
+      <p>When the browser reads <code>&lt;h1&gt;Hi, I'm VT.&lt;/h1&gt;</code>, the tags tell it "this text is the top-level heading" — not what color it should be or how big. That's the whole job of HTML: naming the parts. We used <b>semantic tags</b> specifically — <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;footer&gt;</code> — instead of generic <code>&lt;div&gt;</code>s everywhere, because a screen reader, a search engine, and another developer reading the code all get real information from a tag named <code>&lt;nav&gt;</code> that a <code>&lt;div class="nav"&gt;</code> only gives them if they read the class name too.</p>
+      <p>CSS and JavaScript then attach to that structure from the outside — CSS via tag names and classes, JavaScript via the same selectors. HTML is the skeleton everything else hangs off of.</p>
+    </section>
+
+    <section id="page-vs-site">
+      <h2><span class="section-num">03</span>Is this a page, or a website?</h2>
+      <p class="section-intro">Worth being precise about, since the terms get used interchangeably but mean different things.</p>
+      <div class="compare">
+        <div class="compare-card is-this-project">
+          <span class="compare-tag">What we built</span>
+          <h3>A single-page site</h3>
+          <p>One file — <code>index.html</code> — with four sections (Hero, About, Projects, Contact) stitched together on one scrolling page. Clicking "About" in the nav doesn't load a new page; it jumps to an anchor (<code>#about</code>) further down the <i>same</i> document.</p>
+        </div>
+        <div class="compare-card">
+          <span class="compare-tag">What we didn't build (yet)</span>
+          <h3>A multi-page website</h3>
+          <p>Separate HTML files — <code>about.html</code>, <code>projects.html</code> — or, in a framework, separate <i>routes</i>, each a distinct URL the browser actually navigates to. Project 3 (React/Next.js) introduces real routing.</p>
+        </div>
+      </div>
+      <p class="callout"><b>Rule of thumb:</b> if the URL in the address bar changes when you click a link, you've moved to a different page. Ours never changes — that's the signature of a single-page site.</p>
+    </section>
+
+    <section id="aspects">
+      <h2><span class="section-num">04</span>What this project actually covered</h2>
+      <p class="section-intro">Small as it looks, Project 1 touched six distinct disciplines — the same six that show up in every real web project, just at the smallest possible scale.</p>
+      <div class="aspect-grid">
+        <div class="aspect-card">
+          <h3>Structure</h3>
+          <ul>
+            <li><b>Semantic HTML</b> — header/nav/main/section/footer</li>
+            <li>Anchor-link navigation (zero-JS routing)</li>
+            <li>Meta tags: viewport, description</li>
+          </ul>
+        </div>
+        <div class="aspect-card">
+          <h3>Styling</h3>
+          <ul>
+            <li>CSS reset — killing inconsistent browser defaults</li>
+            <li><b>Flexbox</b> for the nav layout</li>
+            <li>Media queries — the actual mechanism behind "mobile-responsive"</li>
+          </ul>
+        </div>
+        <div class="aspect-card">
+          <h3>Behavior</h3>
+          <ul>
+            <li><b>DOM selection</b> — <code>querySelector</code></li>
+            <li>Events — <code>addEventListener</code></li>
+            <li><code>classList.toggle()</code> for the mobile menu</li>
+          </ul>
+        </div>
+        <div class="aspect-card">
+          <h3>Debugging</h3>
+          <ul>
+            <li>Reading DevTools' <b>Network tab</b> for a missing/broken file</li>
+            <li>Diagnosing "silent" HTML failures (a missing <code>&lt;head&gt;</code> throws no error)</li>
+            <li>Telling real changes apart from line-ending noise</li>
+          </ul>
+        </div>
+        <div class="aspect-card">
+          <h3>Version control</h3>
+          <ul>
+            <li>Git basics — init, add, commit, push</li>
+            <li>One combined repo for all 10 projects</li>
+            <li>Why rewriting <i>pushed</i> history is a "stop and ask" moment</li>
+          </ul>
+        </div>
+        <div class="aspect-card">
+          <h3>Tooling &amp; deploy</h3>
+          <ul>
+            <li>A custom <b>code-explainer</b> subagent</li>
+            <li>A post-commit push-reminder hook</li>
+            <li>Free-tier hosting via Vercel + GitHub</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="deployment">
+      <h2><span class="section-num">05</span>How the deployment actually works</h2>
+      <p class="section-intro">"Deploying" just means: put the files somewhere the public internet can reach, over HTTPS, at a stable address. Here's what's actually happening behind that one click.</p>
+      <div class="deploy-flow">
+        <div class="deploy-row">
+          <div class="deploy-icon">1</div>
+          <div class="deploy-text"><b>Vercel connects to GitHub via OAuth</b><span>Signing in with "Continue with GitHub" links your Vercel account to your claudegyanyaan-ai identity — no separate password.</span></div>
+        </div>
+        <div class="deploy-row">
+          <div class="deploy-icon">2</div>
+          <div class="deploy-text"><b>A webhook gets installed on the repo</b><span>Vercel subscribes to "notify me on every push" — this is the piece that makes redeploys automatic later.</span></div>
+        </div>
+        <div class="deploy-row">
+          <div class="deploy-icon">3</div>
+          <div class="deploy-text"><b>Root Directory scopes the deploy</b><span>Since this repo holds all 10 projects, we pointed Vercel at <code>project-1-portfolio</code> specifically — otherwise it would try to serve the whole repo as one site.</span></div>
+        </div>
+        <div class="deploy-row">
+          <div class="deploy-icon">4</div>
+          <div class="deploy-text"><b>No build step, because there's nothing to build</b><span>Plain HTML/CSS/JS ships as-is. (Projects 3+ introduce an actual build step, once React enters the picture.)</span></div>
+        </div>
+        <div class="deploy-row">
+          <div class="deploy-icon">5</div>
+          <div class="deploy-text"><b>A live URL is assigned, HTTPS included free</b><span>web-app-dev-mentor-projec1.vercel.app — reachable by anyone, anywhere, with a padlock in the address bar by default.</span></div>
+        </div>
+      </div>
+      <p class="callout"><b>What "auto-deploy" means going forward:</b> every future <code>git push</code> to <code>main</code> triggers that webhook again — Vercel rebuilds and republishes to the <i>same</i> URL automatically. No manual redeploy step, ever, unless you're changing infrastructure settings like the Root Directory.</p>
+    </section>
+
+    <section id="commands">
+      <h2><span class="section-num">06</span>Commands reference</h2>
+      <p class="section-intro">The actual commands run this session, grouped by what they were for.</p>
+
+      <div class="cmd-group">
+        <h3>Repo setup</h3>
+        <div class="cmd-block">
+<span class="cmd-line"><span class="cmd">git init</span></span><span class="cmd-line"><span class="comment"># turns this folder into a git repository</span></span>
+<span class="cmd-line"><span class="cmd">mkdir project-1-portfolio</span></span>
+<span class="cmd-line"><span class="cmd">mkdir chat-logs</span></span>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <h3>Connecting to GitHub</h3>
+        <div class="cmd-block">
+<span class="cmd-line"><span class="cmd">git branch -M main</span></span>
+<span class="cmd-line"><span class="cmd">git remote add origin https://github.com/claudegyanyaan-ai/web-app-dev-mentor.git</span></span>
+<span class="cmd-line"><span class="cmd">git push -u origin main</span></span><span class="cmd-line"><span class="comment"># -u links local "main" to origin's "main" for future plain pushes</span></span>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <h3>The everyday commit loop</h3>
+        <div class="cmd-block">
+<span class="cmd-line"><span class="cmd">git status</span></span><span class="cmd-line"><span class="comment"># what changed?</span></span>
+<span class="cmd-line"><span class="cmd">git add .</span></span><span class="cmd-line"><span class="comment"># stage everything changed</span></span>
+<span class="cmd-line"><span class="cmd">git commit -m "message"</span></span><span class="cmd-line"><span class="comment"># save a checkpoint</span></span>
+<span class="cmd-line"><span class="cmd">git push</span></span><span class="cmd-line"><span class="comment"># send it to GitHub → triggers Vercel redeploy</span></span>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <h3>Undoing a mistake safely</h3>
+        <div class="cmd-block">
+<span class="cmd-line"><span class="cmd">git diff -w --stat</span></span><span class="cmd-line"><span class="comment"># check if a "change" is real, or just line-ending noise</span></span>
+<span class="cmd-line"><span class="cmd">git checkout -- .</span></span><span class="cmd-line"><span class="comment"># discard uncommitted changes, restore last commit's version</span></span>
+        </div>
+      </div>
+    </section>
+
+    <section id="steps">
+      <h2><span class="section-num">07</span>Steps we actually took</h2>
+      <p class="section-intro">In order, as they happened — a real sequence, so the numbering here means something.</p>
+      <ol class="timeline">
+        <li><b>Set up the local repo</b><span>Connected a folder on this machine, ran <code>git init</code>, created <code>project-1-portfolio/</code>.</span></li>
+        <li><b>Created the GitHub repo &amp; pushed</b><span>One combined repo (<code>web-app-dev-mentor</code>) for all 10 projects, so colleagues can clone one place.</span></li>
+        <li><b>Built the HTML skeleton</b><span><code>index.html</code> — doctype, head, viewport meta, linked <code>styles.css</code> / <code>script.js</code>.</span></li>
+        <li><b>Filled in real content</b><span>Semantic sections: header/nav, hero, about, projects, contact, footer.</span></li>
+        <li><b>Styled it with CSS</b><span>Reset, Flexbox nav, section spacing, a responsive media query.</span></li>
+        <li><b>Debugged a silent failure</b><span>Styling wasn't applying — traced to a missing <code>&lt;head&gt;</code> block, no linked stylesheet at all.</span></li>
+        <li><b>Added the mobile hamburger menu</b><span>A button, a CSS class toggle, and the JavaScript event listener that connects them.</span></li>
+        <li><b>Added mentor tooling</b><span>A <code>code-explainer</code> subagent and a post-commit push-reminder hook, copied from the certification-track repo.</span></li>
+        <li><b>Personalized the content, committed, pushed</b><span>Real name, bio, and contact info replacing every placeholder.</span></li>
+        <li><b>Deployed to Vercel</b><span>Signed in via GitHub, installed the Vercel GitHub App, imported the repo with Root Directory set to <code>project-1-portfolio</code>.</span></li>
+        <li><b>Verified the live site externally</b><span>Confirmed the deployed URL actually renders — not just the Vercel dashboard preview.</span></li>
+      </ol>
+    </section>
+
+    <footer class="doc-footer">
+      Web &amp; App Dev Mentor Track — Project 1 of 10. Saved to <code>project-1-portfolio/</code> in the repo alongside <code>progress.html</code> and <code>CONCEPTS.md</code>.
+    </footer>
+  </main>
+</div>

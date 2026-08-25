@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web &amp; App Dev Mentor — Master Progress Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fafafa;
+    padding: 2rem;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.9rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #666; margin-bottom: 1.5rem; }
+
+  .summary-bar {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-bottom: 1.75rem;
+  }
+  .summary-item .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.03em; }
+  .summary-item .value { font-size: 1.4rem; font-weight: 700; margin-top: 0.1rem; }
+
+  .progress-track {
+    height: 10px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 0.75rem;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #16a34a;
+    width: 10%;
+  }
+
+  .project-list { display: flex; flex-direction: column; gap: 0.9rem; }
+  .project-card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .project-card.done { border-left: 4px solid #16a34a; }
+  .project-card.upcoming { border-left: 4px solid #d4d4d4; opacity: 0.75; }
+
+  .project-main { flex: 1; min-width: 220px; }
+  .project-name { font-weight: 700; font-size: 1.02rem; }
+  .project-desc { color: #777; font-size: 0.88rem; margin-top: 0.15rem; }
+
+  .project-meta {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #555;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+  .badge.done { background: #dcfce7; color: #15803d; }
+  .badge.pending { background: #f3f4f6; color: #888; }
+
+  a.live-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  a.live-link:hover { text-decoration: underline; }
+
+  footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Web &amp; App Dev Mentor — Master Dashboard</h1>
+  <p class="subtitle">10-project ladder · target 50–60 working days</p>
+
+  <div class="summary-bar">
+    <div class="summary-item">
+      <div class="label">Projects complete</div>
+      <div class="value">1 / 10</div>
+    </div>
+    <div class="summary-item">
+      <div class="label">Days used so far</div>
+      <div class="value">1 / 50–60</div>
+    </div>
+    <div class="summary-item">
+      <div class="label">Pace</div>
+      <div class="value" style="color:#16a34a;">On track</div>
+    </div>
+    <div style="flex-basis:100%;">
+      <div class="progress-track"><div class="progress-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="project-list">
+
+    <div class="project-card done">
+      <div class="project-main">
+        <div class="project-name">1. Portfolio Site</div>
+        <div class="project-desc">Static HTML/CSS/JS · responsive nav + mobile menu</div>
+      </div>
+      <div class="project-meta">
+        <span class="badge done">Complete</span>
+        <span>1 day (of 1–2)</span>
+        <a class="live-link" href="https://web-app-dev-mentor-projec1.vercel.app/" target="_blank">Live site →</a>
+      </div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">2. Interactive To-Do App</div>
+        <div class="project-desc">Vanilla JS + localStorage · client-side state, events</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 2–3 days</span></div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">3. To-Do App in React/Next.js</div>
+        <div class="project-desc">Components, props, state · why frameworks exist</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 3–4 days</span></div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">4. Full-Stack CRUD App</div>
+        <div class="project-desc">Next.js + FastAPI + Postgres · REST APIs, DB</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 5–6 days</span></div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">5. Auth-Enabled App + First PWA</div>
+        <div class="project-desc">Mini blogging platform · login/signup, protected routes</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 4–5 days</span></div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">6. Real-Time Feature App</div>
+        <div class="project-desc">Live chat/dashboard · websockets/polling, 3rd-party API</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 4–5 days</span></div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">7. Payments-Enabled App</div>
+        <div class="project-desc">Stripe test mode · webhooks, payment flows, security</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 4–5 days</span></div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">8. Mini EdTech Platform</div>
+        <div class="project-desc">Courses, quizzes, progress tracking · rehearsal for Project 9</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 5–6 days</span></div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">9. Flagship 1 — Education Platform</div>
+        <div class="project-desc">Physics Wallah–style · full auth, payments, 1000+ user design bar</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 10–13 days</span></div>
+    </div>
+
+    <div class="project-card upcoming">
+      <div class="project-main">
+        <div class="project-name">10. Flagship 2 — Stock Screener App</div>
+        <div class="project-desc">Live/delayed market data · filterable screener, watchlists</div>
+      </div>
+      <div class="project-meta"><span class="badge pending">Not started</span><span>Budget: 10–13 days</span></div>
+    </div>
+
+  </div>
+
+  <footer>Repo: github.com/claudegyanyaan-ai/web-app-dev-mentor · Last updated 2026-08-25</footer>
+</div>
+</body>
+</html>
