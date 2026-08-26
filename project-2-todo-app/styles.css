@@ -1,0 +1,136 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f6f7f5;
+  color: #1a1a1a;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.app {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+#task-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+#task-input {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+#task-input:focus {
+  outline: none;
+  border-color: #2a6f6f;
+}
+
+#task-form button {
+  padding: 0.6rem 1.2rem;
+  background: #1a1a1a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+#task-form button:hover {
+  background: #333;
+}
+
+#task-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+#task-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+#task-list li.done .task-text {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.task-text {
+  flex: 1;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.toggle {
+  width: 18px;
+  height: 18px;
+  accent-color: #2a6f6f;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.edit-btn, .delete-btn, .save-btn {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.edit-btn:hover, .save-btn:hover {
+  background: #f0f0f0;
+}
+
+.delete-btn:hover {
+  background: #fee;
+  border-color: #fbb;
+  color: #c33;
+}
+
+.edit-input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #2a6f6f;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 1.5rem;
+  }
+
+  #task-list li {
+    flex-wrap: wrap;
+  }
+}
