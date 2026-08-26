@@ -1,0 +1,343 @@
+<title>To-Do App Anatomy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --border: #e1ded5;
+    --ink: #22231f;
+    --ink-soft: #55564e;
+    --ink-faint: #8c8b81;
+    --accent: #2a6f6f;
+    --accent-soft: #e4f1ef;
+    --accent-ink: #1c4d4d;
+    --warn: #9a5b12;
+    --warn-soft: #fbeedc;
+    --code-bg: #f1efe7;
+    --shadow: 0 1px 2px rgba(30,30,25,0.04), 0 8px 24px rgba(30,30,25,0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171814;
+      --surface: #1f211b;
+      --border: #34362c;
+      --ink: #ece9df;
+      --ink-soft: #b7b5a8;
+      --ink-faint: #7d7c70;
+      --accent: #5fc9c0;
+      --accent-soft: #22332f;
+      --accent-ink: #a9e6df;
+      --warn: #e0a352;
+      --warn-soft: #332a1a;
+      --code-bg: #23241d;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171814;
+    --surface: #1f211b;
+    --border: #34362c;
+    --ink: #ece9df;
+    --ink-soft: #b7b5a8;
+    --ink-faint: #7d7c70;
+    --accent: #5fc9c0;
+    --accent-soft: #22332f;
+    --accent-ink: #a9e6df;
+    --warn: #e0a352;
+    --warn-soft: #332a1a;
+    --code-bg: #23241d;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", -apple-system, sans-serif;
+    line-height: 1.65;
+    font-size: 16.5px;
+  }
+  ::selection { background: var(--accent-soft); color: var(--accent-ink); }
+  a { color: var(--accent-ink); }
+  code, .mono { font-family: "IBM Plex Mono", monospace; }
+
+  .shell { display: grid; grid-template-columns: 240px minmax(0,1fr); max-width: 1180px; margin: 0 auto; }
+  @media (max-width: 880px) { .shell { grid-template-columns: 1fr; } }
+
+  nav.toc {
+    position: sticky; top: 0; align-self: start;
+    height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.5rem 2rem 0;
+    border-right: 1px solid var(--border);
+  }
+  @media (max-width: 880px) { nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 1.5rem 1.5rem 1.25rem; } }
+  nav.toc .eyebrow { font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.9rem; }
+  nav.toc ol { list-style: none; counter-reset: toc; display: flex; flex-direction: column; gap: 0.15rem; }
+  nav.toc li { counter-increment: toc; }
+  nav.toc a {
+    display: flex; gap: 0.6rem; text-decoration: none; color: var(--ink-soft);
+    font-size: 0.88rem; padding: 0.4rem 0.5rem; border-radius: 6px;
+  }
+  nav.toc a:hover { background: var(--accent-soft); color: var(--accent-ink); }
+  nav.toc a::before {
+    content: counter(toc, decimal-leading-zero); font-family: "IBM Plex Mono", monospace;
+    color: var(--ink-faint); font-size: 0.8rem;
+  }
+
+  main { padding: 2.5rem 2rem 6rem; min-width: 0; }
+  @media (max-width: 880px) { main { padding: 2rem 1.5rem 4rem; } }
+
+  header.hero { margin-bottom: 3rem; max-width: 640px; }
+  .kicker { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-ink); font-weight: 600; margin-bottom: 0.6rem; }
+  h1 { font-family: "IBM Plex Serif", serif; font-weight: 700; font-size: 2.4rem; text-wrap: balance; margin-bottom: 0.75rem; }
+  .hero p { color: var(--ink-soft); font-size: 1.05rem; max-width: 56ch; }
+
+  section { margin-bottom: 3.4rem; scroll-margin-top: 1.5rem; }
+  h2 {
+    font-family: "IBM Plex Serif", serif; font-weight: 600; font-size: 1.5rem;
+    margin-bottom: 1.1rem; display: flex; align-items: baseline; gap: 0.6rem;
+  }
+  h2 .num { font-family: "IBM Plex Mono", monospace; color: var(--accent-ink); font-size: 1rem; font-weight: 500; }
+  h3 { font-family: "IBM Plex Serif", serif; font-size: 1.1rem; font-weight: 600; margin: 1.4rem 0 0.6rem; }
+  p { color: var(--ink-soft); max-width: 68ch; margin-bottom: 0.9rem; }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  code { background: var(--code-bg); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.88em; color: var(--accent-ink); }
+
+  /* pipeline diagram */
+  .pipeline {
+    display: flex; align-items: stretch; gap: 0; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.5rem; box-shadow: var(--shadow);
+  }
+  .pipeline .step {
+    flex: 1 1 150px; padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.3rem;
+  }
+  .pipeline .step .tag { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--accent-ink); text-transform: uppercase; letter-spacing: 0.05em; }
+  .pipeline .step .title { font-weight: 600; font-size: 0.95rem; }
+  .pipeline .step .desc { font-size: 0.82rem; color: var(--ink-faint); }
+  .pipeline .arrow { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); font-size: 1.3rem; padding: 0 0.15rem; flex: 0 0 auto; }
+  @media (max-width: 700px) { .pipeline { flex-direction: column; } .pipeline .arrow { transform: rotate(90deg); padding: 0.2rem 0; } }
+
+  /* comparison */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+  .compare .col {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.3rem 1.4rem; box-shadow: var(--shadow);
+  }
+  .compare .col .label { font-family: "IBM Plex Mono", monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 0.5rem; }
+  .compare .col.static .label { color: var(--ink-faint); }
+  .compare .col.interactive { border-color: var(--accent); }
+  .compare .col.interactive .label { color: var(--accent-ink); }
+  .compare ul { list-style: none; display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.6rem; }
+  .compare li { font-size: 0.92rem; color: var(--ink-soft); padding-left: 1.1rem; position: relative; }
+  .compare li::before { content: "–"; position: absolute; left: 0; color: var(--ink-faint); }
+
+  /* aspect grid */
+  .aspects { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }
+  .aspect {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.2rem 1.3rem; box-shadow: var(--shadow);
+  }
+  .aspect .icon { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; color: var(--accent-ink); margin-bottom: 0.45rem; }
+  .aspect h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+  .aspect p { font-size: 0.88rem; margin: 0; }
+
+  /* bug callout */
+  .callout {
+    background: var(--warn-soft); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+    border-radius: 10px; padding: 1.1rem 1.3rem; margin-top: 1rem;
+  }
+  .callout .label { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warn); font-weight: 600; margin-bottom: 0.35rem; }
+  .callout p { margin: 0; font-size: 0.92rem; }
+
+  /* commands */
+  .cmdgroup { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem 1.4rem; box-shadow: var(--shadow); margin-bottom: 0.9rem; }
+  .cmdgroup h3 { margin-top: 0; }
+  .cmdgroup .row { display: flex; gap: 1rem; padding: 0.4rem 0; border-top: 1px solid var(--border); align-items: baseline; flex-wrap: wrap; }
+  .cmdgroup .row:first-of-type { border-top: none; }
+  .cmdgroup .row code { flex: 0 0 auto; }
+  .cmdgroup .row span { color: var(--ink-faint); font-size: 0.85rem; }
+
+  /* timeline */
+  .timeline { display: flex; flex-direction: column; }
+  .titem { display: grid; grid-template-columns: 34px 1fr; gap: 0.9rem; }
+  .titem .rail { display: flex; flex-direction: column; align-items: center; }
+  .titem .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 0.4rem; flex-shrink: 0; }
+  .titem .line { width: 1px; flex: 1; background: var(--border); margin-top: 0.3rem; }
+  .titem:last-child .line { display: none; }
+  .titem .body { padding-bottom: 1.3rem; }
+  .titem .step-label { font-family: "IBM Plex Mono", monospace; font-size: 0.75rem; color: var(--accent-ink); }
+  .titem h3 { margin: 0.15rem 0 0.3rem; }
+  .titem p { font-size: 0.9rem; }
+
+  footer.page { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 1.5rem; color: var(--ink-faint); font-size: 0.82rem; }
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <div class="eyebrow">Project 2 · To-Do App</div>
+    <ol>
+      <li><a href="#flow">Data flow</a></li>
+      <li><a href="#state">What "state" means</a></li>
+      <li><a href="#pageapp">Page vs. app</a></li>
+      <li><a href="#aspects">Key aspects</a></li>
+      <li><a href="#bug">The prompt() bug</a></li>
+      <li><a href="#deploy">Deployment</a></li>
+      <li><a href="#commands">Commands used</a></li>
+      <li><a href="#steps">Build steps</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="kicker">Project anatomy · recap</div>
+      <h1>To-Do App Anatomy</h1>
+      <p>Project 1 was a page that sat still and looked nice. Project 2 is a page that remembers
+      things — every click changes what's stored, and what's stored decides what's drawn.
+      This doc walks through how that loop actually works.</p>
+    </header>
+
+    <section id="flow">
+      <h2><span class="num">01</span> Data flow — click to pixel</h2>
+      <p>In Project 1, HTML was basically the whole story: content sat in the file, CSS painted
+      it. Here there's a loop running underneath the page, and it's worth seeing as one path:</p>
+      <div class="pipeline">
+        <div class="step"><span class="tag">1 · Action</span><span class="title">User clicks / types / submits</span><span class="desc">Add task, tick a box, hit Delete</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="tag">2 · Handler</span><span class="title">JS event listener fires</span><span class="desc">One delegated listener catches it</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="tag">3 · State</span><span class="title">The <code>tasks</code> array changes</span><span class="desc">push, splice, or flip a property</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="tag">4 · Save</span><span class="title">localStorage updated</span><span class="desc"><code>JSON.stringify(tasks)</code></span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="tag">5 · Render</span><span class="title">List redrawn on screen</span><span class="desc">wipe + rebuild from the array</span></div>
+      </div>
+      <p style="margin-top:1rem;">Nothing on screen is ever edited directly. Every visible change happens because
+      the array changed first, and the render step read the array again. That indirection — never
+      touch the pixels, always touch the data and re-draw — is the single most important habit
+      this project was building toward Project 3's framework.</p>
+    </section>
+
+    <section id="state">
+      <h2><span class="num">02</span> What "state" actually means</h2>
+      <p>State is just: <strong>the data your app is holding right now, while the tab is open.</strong>
+      Here it's nothing more exotic than a JS array sitting in memory:</p>
+      <div class="cmdgroup">
+        <div class="row" style="border-top:none; display:block;">
+<code style="display:block; white-space:pre; background:none; padding:0;">let tasks = [
+  { text: "Buy milk", done: false, editing: false },
+  { text: "Walk the dog", done: true,  editing: false }
+];</code>
+        </div>
+      </div>
+      <p>Everything you see — the strikethrough on "Walk the dog," the checkbox being ticked,
+      the Edit box appearing — is just this array being read and turned into HTML. Change the
+      array, and the next render shows the change. This is exactly the mental model React
+      formalizes in Project 3; here we're doing it by hand so the concept is visible, not hidden
+      behind a library.</p>
+    </section>
+
+    <section id="pageapp">
+      <h2><span class="num">03</span> Page vs. app</h2>
+      <p>Both projects are "just HTML/CSS/JS in a browser" under the hood — there's no hard
+      technical line. But there's a real difference in what the page is <em>for</em>:</p>
+      <div class="compare">
+        <div class="col static">
+          <div class="label">Project 1 — static page</div>
+          <ul>
+            <li>Content is fixed in the HTML file</li>
+            <li>JS only toggles a CSS class (menu open/closed)</li>
+            <li>Reload always shows the same thing</li>
+            <li>No data is created, changed, or remembered</li>
+          </ul>
+        </div>
+        <div class="col interactive">
+          <div class="label">Project 2 — interactive app</div>
+          <ul>
+            <li>Content is generated from data (the tasks array)</li>
+            <li>JS creates, edits, and deletes that data</li>
+            <li>Reload shows whatever YOU left it as</li>
+            <li>The page has memory (localStorage) — it's stateful</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="aspects">
+      <h2><span class="num">04</span> Key aspects this project covered</h2>
+      <div class="aspects">
+        <div class="aspect"><div class="icon">JS·01</div><h3>Event delegation</h3><p>One click listener on the list handles every button, forever — even ones that don't exist yet.</p></div>
+        <div class="aspect"><div class="icon">JS·02</div><h3>Render-by-rebuild</h3><p>Wipe the list, redraw it from the array. Simple to reason about; the precursor to what React automates.</p></div>
+        <div class="aspect"><div class="icon">JS·03</div><h3>data-* attributes</h3><p>Tags each button with which task index it belongs to, so the delegated handler knows what was clicked.</p></div>
+        <div class="aspect"><div class="icon">JS·04</div><h3>Template literals</h3><p>Backtick strings with <code>${...}</code> build the HTML for each row directly from the data.</p></div>
+        <div class="aspect"><div class="icon">DATA</div><h3>localStorage + JSON</h3><p>Browser storage only holds strings, so data is stringified going in and parsed coming back out.</p></div>
+        <div class="aspect"><div class="icon">DBG</div><h3>DevTools console</h3><p>Used to catch the exact error and line number that led to diagnosing the prompt() issue.</p></div>
+      </div>
+    </section>
+
+    <section id="bug">
+      <h2><span class="num">05</span> The prompt() bug — not every red error is your fault</h2>
+      <p>The first "Edit" button called <code>window.prompt()</code> — a native browser popup.
+      It threw <code>Uncaught Error: prompt() is not supported</code>.</p>
+      <div class="callout">
+        <div class="label">Root cause</div>
+        <p>The page was being previewed inside an <strong>embedded VS Code webview</strong>
+        (visible from the <code>file:///</code> URL), which disables native dialogs like
+        <code>prompt()</code>/<code>alert()</code>/<code>confirm()</code> for security. This
+        wasn't a mistake in the code — it was a limitation of that specific preview
+        environment.</p>
+      </div>
+      <p style="margin-top:0.9rem;">Fix: instead of asking the browser for a popup, we built the
+      edit UI ourselves — an <code>editing</code> flag on each task object that makes
+      <code>renderTasks()</code> show an inline input + Save button instead of the normal row.
+      More code, but it works everywhere, not just in browsers that allow native dialogs.</p>
+    </section>
+
+    <section id="deploy">
+      <h2><span class="num">06</span> Deployment — a second, independent project</h2>
+      <p>Project 2 lives in the same combined GitHub repo as Project 1, but was deployed as its
+      own <strong>separate Vercel project</strong> — same account, same repo, different Root
+      Directory (<code>project-2-todo-app</code>). Each project gets its own URL, its own build,
+      and redeploys independently: pushing to <code>project-1-portfolio/</code> never rebuilds
+      Project 2, and vice versa. That's what makes one combined repo workable for a whole
+      10-project ladder instead of ten separate repos.</p>
+    </section>
+
+    <section id="commands">
+      <h2><span class="num">07</span> Commands used in this project</h2>
+      <div class="cmdgroup">
+        <h3>Git (same repo, new folder)</h3>
+        <div class="row"><code>git add .</code><span>stage the new project-2-todo-app files</span></div>
+        <div class="row"><code>git commit -m "..."</code><span>save a snapshot with a message</span></div>
+        <div class="row"><code>git push</code><span>send commits to GitHub</span></div>
+      </div>
+      <div class="cmdgroup">
+        <h3>Browser DevTools</h3>
+        <div class="row"><code>Console tab</code><span>surfaced the exact prompt() error + line number</span></div>
+        <div class="row"><code>Application → Local Storage</code><span>inspect saved tasks directly</span></div>
+      </div>
+      <div class="cmdgroup">
+        <h3>Vercel</h3>
+        <div class="row"><code>New Project</code><span>same GitHub repo, new import</span></div>
+        <div class="row"><code>Root Directory</code><span>set to project-2-todo-app</span></div>
+      </div>
+    </section>
+
+    <section id="steps">
+      <h2><span class="num">08</span> Build steps, in order</h2>
+      <div class="timeline">
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 1</span><h3>Skeleton</h3><p>index.html — form, input, empty task list container.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 2</span><h3>Add + render</h3><p>tasks array, submit handler with preventDefault(), renderTasks() rebuild loop.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 3</span><h3>Toggle / delete / edit</h3><p>One delegated click listener, data-index attributes, the prompt() bug and fix.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 4</span><h3>Persistence</h3><p>saveTasks()/loadTasks() wired to localStorage; verified survival across refresh.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 5</span><h3>Styling</h3><p>Card layout, teal accent-color checkboxes, strikethrough, mobile wrap.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div></div><div class="body"><span class="step-label">STEP 6</span><h3>Deploy</h3><p>Second Vercel project, Root Directory scoped, verified live externally.</p></div></div>
+      </div>
+    </section>
+
+    <footer class="page">Web &amp; App Dev Mentor Track · Project 2 of 10 · project-2-todo-app/todo-app-anatomy.html</footer>
+  </main>
+</div>
