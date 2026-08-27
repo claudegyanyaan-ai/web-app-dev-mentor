@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 3 Progress — To-Do App in React/Next.js</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fafafa;
+    padding: 2rem;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #666; margin-bottom: 1.5rem; }
+  .status-badge {
+    display: inline-block;
+    background: #16a34a;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+  ul.checklist { list-style: none; }
+  ul.checklist li {
+    padding: 0.35rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  ul.checklist li::before {
+    content: "✓";
+    color: #16a34a;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+  .meta-item .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.03em; }
+  .meta-item .value { font-size: 1.1rem; font-weight: 600; margin-top: 0.15rem; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .live-link {
+    display: inline-block;
+    background: #1a1a1a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+  .live-link:hover { background: #333; text-decoration: none; }
+  .concept-list { list-style: none; }
+  .concept-list li { padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
+  .concept-list li:last-child { border-bottom: none; }
+  .bug-note {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+  }
+  .bug-note + .bug-note { margin-top: 0.6rem; }
+  footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Project 3: To-Do App in React/Next.js</h1>
+  <p class="subtitle">Web &amp; App Dev Mentor Track — status tracker</p>
+  <span class="status-badge">✓ Complete &amp; Deployed</span>
+
+  <div class="card">
+    <h2>At a glance</h2>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="label">Days spent</div>
+        <div class="value">~1 / 3–4 budget</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Started</div>
+        <div class="value">2026-08-27</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Completed</div>
+        <div class="value">2026-08-27</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Stack</div>
+        <div class="value">React / Next.js / Tailwind</div>
+      </div>
+    </div>
+    <a class="live-link" href="https://web-app-dev-mentor-project-3-to-do.vercel.app/" target="_blank">Visit Live Site →</a>
+  </div>
+
+  <div class="card">
+    <h2>Build checklist</h2>
+    <ul class="checklist">
+      <li>Scaffolded via create-next-app (JavaScript + Tailwind CSS + App Router)</li>
+      <li>components/TaskItem.js, TaskList.js, AddTaskForm.js — first React components</li>
+      <li>useState-driven task list with add / toggle / delete</li>
+      <li>localStorage persistence via two useEffect hooks (load-once, save-on-change)</li>
+      <li>Styling pass — checkbox toggle, teal accent matching Projects 1–2</li>
+      <li>Deployed to Vercel as a third project — first one with a real build step</li>
+      <li>Live URL verified externally after fixing a Windows/Linux case-sensitivity bug</li>
+    </ul>
+    <div class="bug-note">
+      <strong>Bug fixed — Delete button not rendering:</strong> traced to a stale Turbopack
+      dev-server cache. Fixed with a full server restart (Ctrl+C, then <code>npm run dev</code>
+      again) — a good general troubleshooting step when saved code isn't reflecting in the browser.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — Vercel build failed with "Module not found":</strong> the
+      components folder was locally named <code>Components</code> (capital C), which Windows'
+      case-insensitive filesystem tolerated but Vercel's Linux build environment did not.
+      Fixed via a two-step <code>git mv</code> rename to force Git to register the case change.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Concepts introduced</h2>
+    <p style="margin-bottom:0.75rem; color:#555;">Full plain-English explanations in <a href="CONCEPTS.md">CONCEPTS.md</a>. Summary:</p>
+    <ul class="concept-list">
+      <li>Components — small reusable functions that return UI</li>
+      <li>JSX — HTML-like syntax embedded in JavaScript</li>
+      <li>Props — how data and behavior flow into a component from its parent</li>
+      <li>useState — React-managed data that triggers automatic re-renders</li>
+      <li>Never mutate state directly — always build a new array/object (spread, map, filter)</li>
+      <li>useEffect — syncing with something outside React (localStorage)</li>
+      <li>"use client" — marking a component as needing to run in the browser</li>
+      <li>The build step — why Next.js needs "npm run build" before deployment</li>
+      <li>OS case-sensitivity — why code that works locally can fail once deployed</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Checkpoint quiz</h2>
+    <div class="quiz-item"><div class="q">1. What's the difference between how Project 2 updated the screen and how Project 3 does it?</div></div>
+    <div class="quiz-item"><div class="q">2. What does useState actually give you back, and why can't you just do tasks.push(newTask) to add one?</div></div>
+    <div class="quiz-item"><div class="q">3. What are props, in your own words — and what's an example of a prop used in this project?</div></div>
+    <div class="quiz-item"><div class="q">4. Why did the app need TWO separate useEffect hooks instead of just one?</div></div>
+    <div class="quiz-item"><div class="q">5. Why did the app work fine on your computer but fail to deploy on Vercel the first time?</div></div>
+    <p style="color:#888; font-size:0.9rem; margin-top:0.5rem;">Answered verbally in the mentoring session — see debrief.</p>
+  </div>
+
+  <div class="card">
+    <h2>What you could break/change next</h2>
+    <ul class="checklist">
+      <li>Add a task counter ("3 of 5 done") derived from the tasks array</li>
+      <li>Add a "clear completed" button using .filter()</li>
+      <li>Try commenting out the "loaded" flag logic and see the data-wipe bug it was preventing</li>
+      <li>Split tasks into two separate lists (active / done) using .filter() twice</li>
+    </ul>
+  </div>
+
+  <footer>Web &amp; App Dev Mentor Track · Project 3 of 10 · Last updated 2026-08-27</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<title>React To-Do Anatomy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --border: #e1ded5;
+    --ink: #22231f;
+    --ink-soft: #55564e;
+    --ink-faint: #8c8b81;
+    --accent: #2a6f6f;
+    --accent-soft: #e4f1ef;
+    --accent-ink: #1c4d4d;
+    --warn: #9a5b12;
+    --warn-soft: #fbeedc;
+    --code-bg: #f1efe7;
+    --shadow: 0 1px 2px rgba(30,30,25,0.04), 0 8px 24px rgba(30,30,25,0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171814;
+      --surface: #1f211b;
+      --border: #34362c;
+      --ink: #ece9df;
+      --ink-soft: #b7b5a8;
+      --ink-faint: #7d7c70;
+      --accent: #5fc9c0;
+      --accent-soft: #22332f;
+      --accent-ink: #a9e6df;
+      --warn: #e0a352;
+      --warn-soft: #332a1a;
+      --code-bg: #23241d;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171814;
+    --surface: #1f211b;
+    --border: #34362c;
+    --ink: #ece9df;
+    --ink-soft: #b7b5a8;
+    --ink-faint: #7d7c70;
+    --accent: #5fc9c0;
+    --accent-soft: #22332f;
+    --accent-ink: #a9e6df;
+    --warn: #e0a352;
+    --warn-soft: #332a1a;
+    --code-bg: #23241d;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", -apple-system, sans-serif;
+    line-height: 1.65;
+    font-size: 16.5px;
+  }
+  ::selection { background: var(--accent-soft); color: var(--accent-ink); }
+  a { color: var(--accent-ink); }
+  code, .mono { font-family: "IBM Plex Mono", monospace; }
+
+  .shell { display: grid; grid-template-columns: 240px minmax(0,1fr); max-width: 1180px; margin: 0 auto; }
+  @media (max-width: 880px) { .shell { grid-template-columns: 1fr; } }
+
+  nav.toc {
+    position: sticky; top: 0; align-self: start;
+    height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.5rem 2rem 0;
+    border-right: 1px solid var(--border);
+  }
+  @media (max-width: 880px) { nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 1.5rem 1.5rem 1.25rem; } }
+  nav.toc .eyebrow { font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.9rem; }
+  nav.toc ol { list-style: none; counter-reset: toc; display: flex; flex-direction: column; gap: 0.15rem; }
+  nav.toc li { counter-increment: toc; }
+  nav.toc a {
+    display: flex; gap: 0.6rem; text-decoration: none; color: var(--ink-soft);
+    font-size: 0.88rem; padding: 0.4rem 0.5rem; border-radius: 6px;
+  }
+  nav.toc a:hover { background: var(--accent-soft); color: var(--accent-ink); }
+  nav.toc a::before {
+    content: counter(toc, decimal-leading-zero); font-family: "IBM Plex Mono", monospace;
+    color: var(--ink-faint); font-size: 0.8rem;
+  }
+
+  main { padding: 2.5rem 2rem 6rem; min-width: 0; }
+  @media (max-width: 880px) { main { padding: 2rem 1.5rem 4rem; } }
+
+  header.hero { margin-bottom: 3rem; max-width: 640px; }
+  .kicker { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-ink); font-weight: 600; margin-bottom: 0.6rem; }
+  h1 { font-family: "IBM Plex Serif", serif; font-weight: 700; font-size: 2.4rem; text-wrap: balance; margin-bottom: 0.75rem; }
+  .hero p { color: var(--ink-soft); font-size: 1.05rem; max-width: 56ch; }
+
+  section { margin-bottom: 3.4rem; scroll-margin-top: 1.5rem; }
+  h2 {
+    font-family: "IBM Plex Serif", serif; font-weight: 600; font-size: 1.5rem;
+    margin-bottom: 1.1rem; display: flex; align-items: baseline; gap: 0.6rem;
+  }
+  h2 .num { font-family: "IBM Plex Mono", monospace; color: var(--accent-ink); font-size: 1rem; font-weight: 500; }
+  h3 { font-family: "IBM Plex Serif", serif; font-size: 1.1rem; font-weight: 600; margin: 1.4rem 0 0.6rem; }
+  p { color: var(--ink-soft); max-width: 68ch; margin-bottom: 0.9rem; }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  code { background: var(--code-bg); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.88em; color: var(--accent-ink); }
+
+  /* component tree */
+  .tree {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.6rem; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 0;
+  }
+  .tnode {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.85rem;
+    background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 0.55rem 1rem; text-align: center;
+  }
+  .tnode.root { font-weight: 600; }
+  .tconnector { width: 1px; height: 1.4rem; background: var(--border); }
+  .trow { display: flex; gap: 2.2rem; align-items: flex-start; }
+  .tcol { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .tlabel { font-size: 0.72rem; color: var(--ink-faint); margin-top: 0.4rem; max-width: 12ch; text-align: center; }
+
+  /* pipeline */
+  .pipeline {
+    display: flex; align-items: stretch; gap: 0; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.5rem; box-shadow: var(--shadow);
+  }
+  .pipeline .step { flex: 1 1 150px; padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  .pipeline .step .tag { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--accent-ink); text-transform: uppercase; letter-spacing: 0.05em; }
+  .pipeline .step .title { font-weight: 600; font-size: 0.95rem; }
+  .pipeline .step .desc { font-size: 0.82rem; color: var(--ink-faint); }
+  .pipeline .arrow { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); font-size: 1.3rem; padding: 0 0.15rem; flex: 0 0 auto; }
+  @media (max-width: 700px) { .pipeline { flex-direction: column; } .pipeline .arrow { transform: rotate(90deg); padding: 0.2rem 0; } }
+
+  /* compare */
+  .compare { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  @media (max-width: 800px) { .compare { grid-template-columns: 1fr; } }
+  .compare .col {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.2rem 1.3rem; box-shadow: var(--shadow);
+  }
+  .compare .col .label { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 0.5rem; }
+  .compare .col.current { border-color: var(--accent); }
+  .compare .col.current .label { color: var(--accent-ink); }
+  .compare ul { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; }
+  .compare li { font-size: 0.88rem; color: var(--ink-soft); padding-left: 1rem; position: relative; }
+  .compare li::before { content: "–"; position: absolute; left: 0; color: var(--ink-faint); }
+
+  /* aspects */
+  .aspects { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }
+  .aspect { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem 1.3rem; box-shadow: var(--shadow); }
+  .aspect .icon { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; color: var(--accent-ink); margin-bottom: 0.45rem; }
+  .aspect h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+  .aspect p { font-size: 0.88rem; margin: 0; }
+
+  /* callout */
+  .callout { background: var(--warn-soft); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); border-radius: 10px; padding: 1.1rem 1.3rem; margin-top: 1rem; }
+  .callout .label { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warn); font-weight: 600; margin-bottom: 0.35rem; }
+  .callout p { margin: 0; font-size: 0.92rem; }
+  .callout + .callout { margin-top: 0.8rem; }
+
+  /* commands */
+  .cmdgroup { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem 1.4rem; box-shadow: var(--shadow); margin-bottom: 0.9rem; }
+  .cmdgroup h3 { margin-top: 0; }
+  .cmdgroup .row { display: flex; gap: 1rem; padding: 0.4rem 0; border-top: 1px solid var(--border); align-items: baseline; flex-wrap: wrap; }
+  .cmdgroup .row:first-of-type { border-top: none; }
+  .cmdgroup .row code { flex: 0 0 auto; }
+  .cmdgroup .row span { color: var(--ink-faint); font-size: 0.85rem; }
+
+  /* timeline */
+  .timeline { display: flex; flex-direction: column; }
+  .titem { display: grid; grid-template-columns: 34px 1fr; gap: 0.9rem; }
+  .titem .rail { display: flex; flex-direction: column; align-items: center; }
+  .titem .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 0.4rem; flex-shrink: 0; }
+  .titem .line { width: 1px; flex: 1; background: var(--border); margin-top: 0.3rem; }
+  .titem:last-child .line { display: none; }
+  .titem .body { padding-bottom: 1.3rem; }
+  .titem .step-label { font-family: "IBM Plex Mono", monospace; font-size: 0.75rem; color: var(--accent-ink); }
+  .titem h3 { margin: 0.15rem 0 0.3rem; }
+  .titem p { font-size: 0.9rem; }
+
+  footer.page { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 1.5rem; color: var(--ink-faint); font-size: 0.82rem; }
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <div class="eyebrow">Project 3 · React To-Do</div>
+    <ol>
+      <li><a href="#tree">Component tree</a></li>
+      <li><a href="#flow">Data flow</a></li>
+      <li><a href="#compare">Three builds compared</a></li>
+      <li><a href="#aspects">Key aspects</a></li>
+      <li><a href="#bugs">Two bugs, two lessons</a></li>
+      <li><a href="#deploy">Deployment</a></li>
+      <li><a href="#commands">Commands used</a></li>
+      <li><a href="#steps">Build steps</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="kicker">Project anatomy · recap</div>
+      <h1>React To-Do Anatomy</h1>
+      <p>Same to-do app, third rebuild — but this time the screen doesn't get manually
+      redrawn at all. You describe what things should look like for a given set of data,
+      and React handles making it happen. This doc walks through what changed and why.</p>
+    </header>
+
+    <section id="tree">
+      <h2><span class="num">01</span> The component tree</h2>
+      <p>Instead of one file doing everything, the UI is now a small tree of components,
+      each responsible for one piece, each fed data through props from its parent:</p>
+      <div class="tree">
+        <div class="tnode root">Home (page.js) — owns the tasks array</div>
+        <div class="tconnector"></div>
+        <div class="trow">
+          <div class="tcol">
+            <div class="tnode">AddTaskForm</div>
+            <div class="tlabel">owns its own input text; calls onAddTask(text)</div>
+          </div>
+          <div class="tcol">
+            <div class="tnode">TaskList</div>
+            <div class="tlabel">loops tasks → renders one TaskItem per task</div>
+            <div class="tconnector"></div>
+            <div class="tnode">TaskItem × N</div>
+            <div class="tlabel">renders one row; calls onToggle / onDelete</div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:1rem;">Notice where state actually <em>lives</em>: only in <code>Home</code>. Everything
+      below it is handed data and functions through props — a child never owns the real
+      data, it just gets access to read it and ask the parent to change it.</p>
+    </section>
+
+    <section id="flow">
+      <h2><span class="num">02</span> Data flow — click to pixel, the React way</h2>
+      <p>Compare this to Project 2's pipeline (action → handler → array change → manual
+      save → manual re-render). React collapses the last step entirely:</p>
+      <div class="pipeline">
+        <div class="step"><span class="tag">1 · Action</span><span class="title">User clicks Add / checkbox / Delete</span><span class="desc">Inside a child component</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="tag">2 · Prop call</span><span class="title">Child calls onAddTask / onToggle / onDelete</span><span class="desc">A function handed down from Home</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="tag">3 · setTasks</span><span class="title">Home builds a NEW array</span><span class="desc">spread / map / filter — never mutate</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="tag">4 · React</span><span class="title">Automatic re-render</span><span class="desc">No render() call anywhere</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="tag">5 · useEffect</span><span class="title">Saved to localStorage</span><span class="desc">Fires because tasks changed</span></div>
+      </div>
+      <p style="margin-top:1rem;">Step 4 is the whole point of React: you never write the code that updates the
+      screen. You only ever change the <em>data</em> (via <code>setTasks</code>), and React
+      figures out what to redraw.</p>
+    </section>
+
+    <section id="compare">
+      <h2><span class="num">03</span> Three builds, three philosophies</h2>
+      <div class="compare">
+        <div class="col">
+          <div class="label">Project 1 — static</div>
+          <ul>
+            <li>Content fixed in HTML</li>
+            <li>JS only toggles a CSS class</li>
+            <li>No data, no build step</li>
+          </ul>
+        </div>
+        <div class="col">
+          <div class="label">Project 2 — vanilla JS</div>
+          <ul>
+            <li>Data drives the screen</li>
+            <li>YOU write the redraw logic</li>
+            <li>Manual event delegation</li>
+          </ul>
+        </div>
+        <div class="col current">
+          <div class="label">Project 3 — React</div>
+          <ul>
+            <li>Data drives the screen</li>
+            <li>REACT writes the redraw logic</li>
+            <li>Props replace manual data-* wiring</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="aspects">
+      <h2><span class="num">04</span> Key aspects this project covered</h2>
+      <div class="aspects">
+        <div class="aspect"><div class="icon">RE·01</div><h3>Components</h3><p>Small, reusable functions that each return a piece of the UI.</p></div>
+        <div class="aspect"><div class="icon">RE·02</div><h3>JSX</h3><p>HTML-like syntax inside JS; className instead of class; {} for live values.</p></div>
+        <div class="aspect"><div class="icon">RE·03</div><h3>Props</h3><p>How data and functions flow down from parent to child components.</p></div>
+        <div class="aspect"><div class="icon">RE·04</div><h3>useState</h3><p>React-managed data; changing it via its setter auto-triggers a re-render.</p></div>
+        <div class="aspect"><div class="icon">RE·05</div><h3>Immutability</h3><p>Always build a new array/object (spread, map, filter) — never mutate in place.</p></div>
+        <div class="aspect"><div class="icon">RE·06</div><h3>useEffect</h3><p>Syncing with the outside world (localStorage) after render, not during it.</p></div>
+      </div>
+    </section>
+
+    <section id="bugs">
+      <h2><span class="num">05</span> Two bugs, two real lessons</h2>
+      <div class="callout">
+        <div class="label">Bug 1 — Delete button invisible</div>
+        <p>Code was correct in every file, but a stale Turbopack dev-server cache wasn't
+        picking up the change. Fixed with a full restart (<code>Ctrl+C</code>, then
+        <code>npm run dev</code> again). <strong>Lesson:</strong> when saved code doesn't
+        seem to reflect in the browser and there's no console error, suspect the dev
+        server's cache before suspecting your code.</p>
+      </div>
+      <div class="callout">
+        <div class="label">Bug 2 — Vercel build failed: Module not found</div>
+        <p>The components folder was locally named <code>Components</code> (capital C).
+        Windows' filesystem doesn't distinguish that from <code>components</code>, so it
+        worked fine locally — but Vercel builds on Linux, which treats them as two
+        different folders entirely. <strong>Lesson:</strong> "it works on my machine" isn't
+        proof it'll work once deployed to a different operating system — casing is one of
+        the most common ways this bites people.</p>
+      </div>
+    </section>
+
+    <section id="deploy">
+      <h2><span class="num">06</span> Deployment — the first real build step</h2>
+      <p>Projects 1–2 had Vercel serve files exactly as committed — zero build step.
+      Project 3 is different: Vercel runs <code>npm run build</code> on every push, which
+      compiles JSX into plain JS and bundles everything for production, before serving it.
+      Deployed as a third, independent Vercel project on the same combined repo — Root
+      Directory scoped to <code>project-3-todo-react</code>, exactly like Projects 1–2's
+      pattern, just with a real compile step in between push and live site.</p>
+    </section>
+
+    <section id="commands">
+      <h2><span class="num">07</span> Commands used in this project</h2>
+      <div class="cmdgroup">
+        <h3>Scaffolding</h3>
+        <div class="row"><code>npx create-next-app@latest name</code><span>generate a new Next.js project</span></div>
+        <div class="row"><code>npm run dev</code><span>local dev server with Fast Refresh</span></div>
+      </div>
+      <div class="cmdgroup">
+        <h3>Git — fixing a case-only rename</h3>
+        <div class="row"><code>git mv A A_temp</code><span>step 1 of the case-rename trick</span></div>
+        <div class="row"><code>git mv A_temp a</code><span>step 2 — Git now sees the case change</span></div>
+      </div>
+      <div class="cmdgroup">
+        <h3>Vercel</h3>
+        <div class="row"><code>Import</code><span>same repo, third project</span></div>
+        <div class="row"><code>Root Directory</code><span>project-3-todo-react</span></div>
+        <div class="row"><code>Framework Preset</code><span>Next.js (auto-detected this time)</span></div>
+      </div>
+    </section>
+
+    <section id="steps">
+      <h2><span class="num">08</span> Build steps, in order</h2>
+      <div class="timeline">
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 1</span><h3>Scaffold</h3><p>create-next-app, resolving the Tailwind default detour.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 2</span><h3>Components</h3><p>TaskItem → TaskList (props, .map(), key) proven with sample data.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 3</span><h3>State</h3><p>AddTaskForm + useState wired into page.js — live add confirmed.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 4</span><h3>Toggle / delete</h3><p>Props passed down; Delete-button cache bug diagnosed and fixed.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 5</span><h3>Persistence</h3><p>Two useEffect hooks; confirmed survival across refresh.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="step-label">STEP 6</span><h3>Styling</h3><p>Checkbox + teal accent, matching series branding.</p></div></div>
+        <div class="titem"><div class="rail"><div class="dot"></div></div><div class="body"><span class="step-label">STEP 7</span><h3>Deploy</h3><p>Case-sensitivity bug fixed; third Vercel project verified live.</p></div></div>
+      </div>
+    </section>
+
+    <footer class="page">Web &amp; App Dev Mentor Track · Project 3 of 10 · project-3-todo-react/react-app-anatomy.html</footer>
+  </main>
+</div>
