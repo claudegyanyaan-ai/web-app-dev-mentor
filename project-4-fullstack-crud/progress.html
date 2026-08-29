@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 4 Progress — Full-Stack CRUD App</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fafafa;
+    padding: 2rem;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #666; margin-bottom: 1.5rem; }
+  .status-badge {
+    display: inline-block;
+    background: #16a34a;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+  ul.checklist { list-style: none; }
+  ul.checklist li {
+    padding: 0.35rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  ul.checklist li::before {
+    content: "✓";
+    color: #16a34a;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+  .meta-item .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.03em; }
+  .meta-item .value { font-size: 1.1rem; font-weight: 600; margin-top: 0.15rem; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .live-link {
+    display: inline-block;
+    background: #1a1a1a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  .live-link:hover { background: #333; text-decoration: none; }
+  .concept-list { list-style: none; }
+  .concept-list li { padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
+  .concept-list li:last-child { border-bottom: none; }
+  .bug-note {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+  }
+  .bug-note + .bug-note { margin-top: 0.6rem; }
+  .arch-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0.75rem 0;
+  }
+  .arch-box {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    color: #0f766e;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+  }
+  footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Project 4: Full-Stack CRUD App</h1>
+  <p class="subtitle">Web &amp; App Dev Mentor Track — status tracker</p>
+  <span class="status-badge">✓ Complete &amp; Deployed</span>
+
+  <div class="card">
+    <h2>At a glance</h2>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="label">Days spent</div>
+        <div class="value">~1 / 5–6 budget</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Started</div>
+        <div class="value">2026-08-29</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Completed</div>
+        <div class="value">2026-08-29</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Stack</div>
+        <div class="value">Next.js / FastAPI / Postgres</div>
+      </div>
+    </div>
+    <div class="arch-row">
+      <span class="arch-box">Next.js (Vercel)</span> → <span class="arch-box">FastAPI (Render)</span> → <span class="arch-box">Postgres (Neon)</span>
+    </div>
+    <a class="live-link" href="https://web-app-dev-mentorproject4.vercel.app/" target="_blank">Visit Live App →</a>
+    <a class="live-link" href="https://web-app-dev-mentor-p4-backend.onrender.com/docs" target="_blank">Backend API Docs →</a>
+  </div>
+
+  <div class="card">
+    <h2>Build checklist</h2>
+    <ul class="checklist">
+      <li>Neon Postgres database created and connected via SQLAlchemy</li>
+      <li>FastAPI backend: models.py (Task table), schemas.py (request/response shapes)</li>
+      <li>Four CRUD endpoints: GET/POST /tasks, PUT/DELETE /tasks/{id} — tested live via Swagger docs</li>
+      <li>CORS configured to allow the frontend to call the backend</li>
+      <li>Next.js frontend scaffolded, lib/api.js wraps all fetch() calls to the backend</li>
+      <li>Components rebuilt to key off task.id (a real database id) instead of array index</li>
+      <li>Edit-task-text feature added — full CRUD demonstrated live in the UI</li>
+      <li>Environment variables used correctly: .env (backend, git-ignored), NEXT_PUBLIC_API_URL (frontend)</li>
+      <li>Deployed as two separate services — backend to Render, frontend to Vercel</li>
+      <li>Verified live end-to-end: adding/editing/toggling/deleting tasks on the real deployed site</li>
+    </ul>
+    <div class="bug-note">
+      <strong>Bug fixed — DATABASE_URL not loading:</strong> a PowerShell command
+      (<code>Out-File -Encoding utf8</code>) silently added an invisible byte-order-mark to
+      .env, which python-dotenv couldn't parse past. Fixed by editing .env directly in a
+      text editor instead.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — Render Start Command:</strong> Render's default placeholder
+      (<code>gunicorn your_application.wsgi</code>) is for Django, not FastAPI. Caught
+      before deploying and corrected to <code>uvicorn main:app --host 0.0.0.0 --port $PORT</code>.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — CORS blocked the deployed frontend:</strong> the backend's
+      allow-list only had localhost:3000; the real deployed Vercel URL had to be added
+      before the live frontend could successfully call the live backend.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Concepts introduced</h2>
+    <p style="margin-bottom:0.75rem; color:#555;">Full plain-English explanations in <a href="CONCEPTS.md">CONCEPTS.md</a>. Summary:</p>
+    <ul class="concept-list">
+      <li>Three-tier architecture — frontend, backend, and database as separate deployed pieces</li>
+      <li>FastAPI + uvicorn — defining endpoints vs. actually running the server</li>
+      <li>CRUD mapped onto REST endpoints (GET/POST/PUT/DELETE)</li>
+      <li>SQLAlchemy — models (table shape), engine (connection), sessions (per-request)</li>
+      <li>Pydantic schemas — API request/response shape, separate from the database model</li>
+      <li>Environment variables and .env — keeping secrets out of code and git</li>
+      <li>CORS — why browsers block cross-origin requests unless explicitly allowed</li>
+      <li>The database as the real source of truth, React state as a local cache of it</li>
+      <li>NEXT_PUBLIC_ prefix — which env vars are safe/needed in browser-side code</li>
+      <li>Deploying two independently configured services that must find each other</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Checkpoint quiz</h2>
+    <div class="quiz-item"><div class="q">1. Why can't the Next.js frontend talk directly to the Postgres database — why does it have to go through FastAPI?</div></div>
+    <div class="quiz-item"><div class="q">2. What's the difference between models.py and schemas.py in this project?</div></div>
+    <div class="quiz-item"><div class="q">3. What is CORS, and what specifically went wrong when we first deployed the frontend?</div></div>
+    <div class="quiz-item"><div class="q">4. Why does lib/api.js use process.env.NEXT_PUBLIC_API_URL instead of just hardcoding the backend's address?</div></div>
+    <div class="quiz-item"><div class="q">5. In Project 3, the tasks array WAS the data. In Project 4, what is the real source of truth, and what is React's tasks state now?</div></div>
+    <p style="color:#888; font-size:0.9rem; margin-top:0.5rem;">Answered verbally in the mentoring session — see debrief.</p>
+  </div>
+
+  <div class="card">
+    <h2>What you could break/change next</h2>
+    <ul class="checklist">
+      <li>Add a "created_at" timestamp column and sort tasks by newest first</li>
+      <li>Add basic validation: reject empty-text tasks on the backend, not just the frontend</li>
+      <li>Try stopping the Render backend (or just wait for it to idle) and see the ~50s cold-start delay firsthand</li>
+      <li>Add a task counter driven by a GET /tasks/count-style endpoint instead of computing it in the frontend</li>
+    </ul>
+  </div>
+
+  <footer>Web &amp; App Dev Mentor Track · Project 4 of 10 · Last updated 2026-08-29</footer>
+</div>
+</body>
+</html>

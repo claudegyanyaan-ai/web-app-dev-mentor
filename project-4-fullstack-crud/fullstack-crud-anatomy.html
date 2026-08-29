@@ -1,0 +1,488 @@
+<title>Full-Stack CRUD Anatomy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --surface-2: #f2f0ea;
+    --border: #ddd8ce;
+    --text: #241f1a;
+    --text-dim: #6b6357;
+    --accent: #2a6f6f;
+    --accent-soft: #e3efee;
+    --accent-text: #1c4d4d;
+    --warn: #a35a1e;
+    --warn-soft: #fbeee0;
+    --code-bg: #241f1a;
+    --code-text: #f2ede2;
+    --shadow: 0 1px 2px rgba(36,31,26,0.06), 0 8px 24px rgba(36,31,26,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f;
+      --surface: #211d17;
+      --surface-2: #2a251d;
+      --border: #3a3327;
+      --text: #ede7db;
+      --text-dim: #b3a894;
+      --accent: #5fc9c0;
+      --accent-soft: #1e3634;
+      --accent-text: #8fe0d8;
+      --warn: #e0a25c;
+      --warn-soft: #3a2c18;
+      --code-bg: #0f0d0a;
+      --code-text: #ede7db;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f;
+    --surface: #211d17;
+    --surface-2: #2a251d;
+    --border: #3a3327;
+    --text: #ede7db;
+    --text-dim: #b3a894;
+    --accent: #5fc9c0;
+    --accent-soft: #1e3634;
+    --accent-text: #8fe0d8;
+    --warn: #e0a25c;
+    --warn-soft: #3a2c18;
+    --code-bg: #0f0d0a;
+    --code-text: #ede7db;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-text); }
+
+  .shell { display: flex; max-width: 1180px; margin: 0 auto; }
+
+  nav.toc {
+    width: 240px;
+    flex-shrink: 0;
+    padding: 3rem 1.5rem 3rem 2rem;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav.toc .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; margin-bottom: 0.65rem; }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    display: flex;
+    gap: 0.55rem;
+  }
+  nav.toc a:hover { color: var(--accent-text); }
+  nav.toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  main { flex: 1; min-width: 0; padding: 3.5rem 2.5rem 6rem; }
+
+  header.hero { margin-bottom: 3rem; }
+  .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 3px;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    line-height: 1.12;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .dek {
+    font-size: 1.08rem;
+    color: var(--text-dim);
+    max-width: 62ch;
+    line-height: 1.55;
+  }
+  .stackline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+  .stackline .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.32rem 0.7rem;
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+  }
+  .stackline .arrow { color: var(--text-dim); }
+
+  section { margin-bottom: 3.25rem; scroll-margin-top: 2rem; }
+  h2 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 1.5rem 0 0.6rem;
+  }
+  p { line-height: 1.7; max-width: 68ch; }
+  p + p { margin-top: 0.9rem; }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 1.1rem 1.3rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    box-shadow: var(--shadow);
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+
+  /* architecture diagram */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2rem 1.5rem;
+    box-shadow: var(--shadow);
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .arch-row { display: flex; align-items: stretch; gap: 0; min-width: 720px; }
+  .arch-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem 1.2rem;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent-soft);
+  }
+  .arch-node .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .arch-node .name { font-weight: 700; font-size: 1rem; }
+  .arch-node .host { font-size: 0.8rem; color: var(--text-dim); }
+  .arch-connector {
+    flex-shrink: 0;
+    width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .arch-connector .glyph { font-size: 1.3rem; color: var(--accent); }
+
+  /* pipeline steps */
+  .pipeline { display: flex; flex-direction: column; gap: 0; margin: 1.5rem 0; }
+  .pipeline-step {
+    display: flex;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pipeline-step:last-child { border-bottom: none; }
+  .pipeline-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+  }
+  .pipeline-body strong { display: block; margin-bottom: 0.2rem; }
+  .pipeline-body span { font-size: 0.9rem; color: var(--text-dim); }
+
+  /* concept grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .grid-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .grid-card .icon { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .grid-card h4 { margin: 0 0 0.35rem; font-size: 0.98rem; font-family: 'IBM Plex Sans', sans-serif; }
+  .grid-card p { font-size: 0.87rem; margin: 0; color: var(--text-dim); max-width: none; }
+
+  /* bug callouts */
+  .bug {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    border-radius: 8px;
+    padding: 1.1rem 1.3rem;
+    margin: 1rem 0;
+  }
+  .bug .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--warn);
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  .bug p { margin: 0; max-width: none; font-size: 0.92rem; }
+
+  /* table */
+  .tablewrap { overflow-x: auto; margin: 1.5rem 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--border); }
+  th { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.82em; }
+
+  footer.page {
+    max-width: 68ch;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 860px) {
+    nav.toc { display: none; }
+    main { padding: 2rem 1.25rem 4rem; }
+  }
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <div class="eyebrow">Project 4 · Contents</div>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Three-tier architecture</a></li>
+      <li><a href="#flow">Request/data flow</a></li>
+      <li><a href="#concepts">Key concepts</a></li>
+      <li><a href="#bugs">Bugs, debugged for real</a></li>
+      <li><a href="#deploy">Deployment</a></li>
+      <li><a href="#commands">Commands reference</a></li>
+      <li><a href="#timeline">Build timeline</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <span class="kicker">Project 4 of 10 · Anatomy</span>
+      <h1>Full-Stack CRUD App</h1>
+      <p class="dek">A to-do list, rebuilt a third time — but this time the data lives on a real server, not in one browser. The first project with a genuine backend, a real database, and two independently deployed services that have to be told how to find each other.</p>
+      <div class="stackline">
+        <span class="pill">Next.js</span><span class="arrow">→</span>
+        <span class="pill">FastAPI</span><span class="arrow">→</span>
+        <span class="pill">Postgres</span>
+        <span class="arrow" style="margin-left:0.5rem;">·</span>
+        <span class="pill">Vercel</span><span class="arrow">+</span><span class="pill">Render</span><span class="arrow">+</span><span class="pill">Neon</span>
+      </div>
+    </header>
+
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Projects 1–3 all ran entirely inside one browser tab. Project 4 is the first app made of three separate programs, each deployed independently, that only work together because they're explicitly configured to trust and find each other. That's the entire shift this project teaches: not new UI skills, but what it actually takes to make an app's data real, permanent, and shared.</p>
+      <p>The task list itself is intentionally the same simple concept as Projects 2 and 3 — the point was never the to-do list. It was building, debugging, and deploying a genuine three-tier system, the same shape almost every real product (a bank app, an email client, a course platform) is built on.</p>
+    </section>
+
+    <section id="architecture">
+      <h2>Three-tier architecture</h2>
+      <div class="arch-diagram">
+        <div class="arch-row">
+          <div class="arch-node">
+            <span class="tag">Tier 1 — what you see</span>
+            <span class="name">Next.js frontend</span>
+            <span class="host">deployed on Vercel</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">→</span>fetch()</div>
+          <div class="arch-node">
+            <span class="tag">Tier 2 — the trusted middleman</span>
+            <span class="name">FastAPI backend</span>
+            <span class="host">deployed on Render</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">→</span>SQLAlchemy</div>
+          <div class="arch-node">
+            <span class="tag">Tier 3 — permanent storage</span>
+            <span class="name">Postgres database</span>
+            <span class="host">hosted on Neon</span>
+          </div>
+        </div>
+      </div>
+      <p>The middle tier exists for one reason: browser code is visible to anyone (view-source, dev tools), so it can never be trusted with database credentials. FastAPI is the only piece allowed to hold the real connection string and talk to Postgres directly — the frontend only ever talks to FastAPI's public API.</p>
+    </section>
+
+    <section id="flow">
+      <h2>Request/data flow — adding one task</h2>
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <span class="pipeline-num">1</span>
+          <div class="pipeline-body"><strong>User types and submits</strong><span>AddTaskForm captures text, calls onAddTask(text)</span></div>
+        </div>
+        <div class="pipeline-step">
+          <span class="pipeline-num">2</span>
+          <div class="pipeline-body"><strong>Frontend calls the backend</strong><span>lib/api.js's createTask() sends a POST /tasks request over the network</span></div>
+        </div>
+        <div class="pipeline-step">
+          <span class="pipeline-num">3</span>
+          <div class="pipeline-body"><strong>FastAPI validates and writes</strong><span>TaskCreate schema checks the shape; a new Task row is added via SQLAlchemy and committed</span></div>
+        </div>
+        <div class="pipeline-step">
+          <span class="pipeline-num">4</span>
+          <div class="pipeline-body"><strong>Postgres confirms, with a real id</strong><span>Neon assigns the row a permanent, auto-incrementing id</span></div>
+        </div>
+        <div class="pipeline-step">
+          <span class="pipeline-num">5</span>
+          <div class="pipeline-body"><strong>Frontend syncs its local state</strong><span>setTasks([...tasks, newTask]) — the screen updates only after the database confirmed the write</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="concepts">
+      <h2>Key concepts</h2>
+      <div class="grid">
+        <div class="grid-card"><div class="icon">CRUD</div><h4>Create / Read / Update / Delete</h4><p>Mapped onto POST, GET, PUT, DELETE — the four operations nearly every app's data layer needs.</p></div>
+        <div class="grid-card"><div class="icon">ORM</div><h4>SQLAlchemy models</h4><p>Python classes (Task) that describe a database table's shape, instead of writing raw SQL by hand.</p></div>
+        <div class="grid-card"><div class="icon">Validation</div><h4>Pydantic schemas</h4><p>TaskCreate / TaskUpdate / TaskOut define what a request must contain and what a response looks like — separate from the database shape.</p></div>
+        <div class="grid-card"><div class="icon">Security</div><h4>CORS</h4><p>The backend explicitly allow-lists which frontend origins may call it — without it, browsers block the request by default.</p></div>
+        <div class="grid-card"><div class="icon">Config</div><h4>Environment variables</h4><p>DATABASE_URL and NEXT_PUBLIC_API_URL keep secrets and per-environment settings out of the code itself.</p></div>
+        <div class="grid-card"><div class="icon">State</div><h4>Database as source of truth</h4><p>Unlike Project 3's array, React's tasks state here is just a cache — Postgres is what's actually real.</p></div>
+      </div>
+    </section>
+
+    <section id="bugs">
+      <h2>Bugs, debugged for real</h2>
+      <p>Every one of these was an actual failure hit mid-build, not a scripted lesson — which is exactly why they're worth keeping.</p>
+      <div class="bug">
+        <span class="label">Invisible connection string</span>
+        <p><code>Out-File -Encoding utf8</code> in PowerShell silently added a byte-order-mark to <code>.env</code>, which python-dotenv couldn't parse past — <code>DATABASE_URL</code> came back as <code>None</code>. Fixed by editing the file directly in a text editor instead of via that command.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Malformed connection string</span>
+        <p>Once the BOM issue was fixed, the next error was more specific: wrong scheme prefix and a missing <code>@</code> separator. Re-copying the connection string fresh from Neon's dashboard (rather than hand-editing it) resolved it.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Render's default Start Command</span>
+        <p>Render pre-fills <code>gunicorn your_application.wsgi</code> — a Django convention. Caught before the first deploy and replaced with <code>uvicorn main:app --host 0.0.0.0 --port $PORT</code>.</p>
+      </div>
+      <div class="bug">
+        <span class="label">CORS blocked the live frontend</span>
+        <p>The deployed page loaded but stuck on "Loading tasks..." forever — the backend's CORS allow-list only had <code>localhost:3000</code>. Diagnosed via the browser console's exact error text, fixed by adding the real Vercel URL to <code>allow_origins</code>.</p>
+      </div>
+    </section>
+
+    <section id="deploy">
+      <h2>Deployment — two services, not one</h2>
+      <p>Projects 1 and 3 each deployed a single Vercel project. This project deploys <strong>two independent services</strong> to two different hosts, and each needs its own Root Directory scoping since both live inside the same combined repo.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Piece</th><th>Host</th><th>Root Directory</th><th>Key setting</th></tr>
+          <tr><td>Backend</td><td>Render</td><td><code>project-4-fullstack-crud/backend</code></td><td>Start Command + <code>DATABASE_URL</code> env var</td></tr>
+          <tr><td>Frontend</td><td>Vercel</td><td><code>project-4-fullstack-crud/frontend</code></td><td><code>NEXT_PUBLIC_API_URL</code> env var</td></tr>
+        </table>
+      </div>
+      <p>Render's free tier also spins an idle backend down after inactivity — the first request afterward can take up to ~50 seconds to wake it. Not a bug, just the tradeoff of the free tier.</p>
+    </section>
+
+    <section id="commands">
+      <h2>Commands reference</h2>
+      <pre><code># Backend — one-time setup
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv
+pip freeze &gt; requirements.txt
+
+# Backend — run locally
+uvicorn main:app --reload
+
+# Frontend — scaffold + run locally
+npx create-next-app@latest frontend
+npm run dev
+
+# Render start command (not the default!)
+uvicorn main:app --host 0.0.0.0 --port $PORT</code></pre>
+    </section>
+
+    <section id="timeline">
+      <h2>Build timeline</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>Kickoff + architecture</strong><span>Why a backend and database are needed; Neon chosen over Supabase</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Database + backend scaffold</strong><span>Neon project created; FastAPI venv, packages, models, schemas, CRUD endpoints</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Tested live via Swagger docs</strong><span>All four CRUD operations proven against the real database before any frontend existed</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>Frontend scaffold + connection</strong><span>lib/api.js, components rekeyed to task.id, page.js rewritten around fetch() instead of localStorage</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>Edit-task feature added</strong><span>Completed the CRUD demonstration in the UI itself, not just via Swagger</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">6</span><div class="pipeline-body"><strong>Deployed</strong><span>Backend to Render, frontend to Vercel, CORS bug found and fixed, verified live end-to-end</span></div></div>
+      </div>
+    </section>
+
+    <footer class="page">Web &amp; App Dev Mentor Track · Project 4 of 10 · 2026-08-29</footer>
+  </main>
+</div>
