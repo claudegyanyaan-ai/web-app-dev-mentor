@@ -1,0 +1,5 @@
+@"
+venv/
+.env
+__pycache__/
+"@ | Out-File -FilePath .gitignore -Encoding utf8
