@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auth-Enabled Task &amp; Notes PWA Anatomy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --surface-2: #f2f0ea;
+    --border: #ddd8ce;
+    --text: #241f1a;
+    --text-dim: #6b6357;
+    --accent: #0d9488;
+    --accent-soft: #e6f6f4;
+    --accent-text: #0f766e;
+    --warn: #a35a1e;
+    --warn-soft: #fbeee0;
+    --code-bg: #241f1a;
+    --code-text: #f2ede2;
+    --shadow: 0 1px 2px rgba(36,31,26,0.06), 0 8px 24px rgba(36,31,26,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f;
+      --surface: #211d17;
+      --surface-2: #2a251d;
+      --border: #3a3327;
+      --text: #ede7db;
+      --text-dim: #b3a894;
+      --accent: #5fc9c0;
+      --accent-soft: #1e3634;
+      --accent-text: #8fe0d8;
+      --warn: #e0a25c;
+      --warn-soft: #3a2c18;
+      --code-bg: #0f0d0a;
+      --code-text: #ede7db;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f;
+    --surface: #211d17;
+    --surface-2: #2a251d;
+    --border: #3a3327;
+    --text: #ede7db;
+    --text-dim: #b3a894;
+    --accent: #5fc9c0;
+    --accent-soft: #1e3634;
+    --accent-text: #8fe0d8;
+    --warn: #e0a25c;
+    --warn-soft: #3a2c18;
+    --code-bg: #0f0d0a;
+    --code-text: #ede7db;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-text); }
+
+  .shell { display: flex; max-width: 1180px; margin: 0 auto; }
+
+  nav.toc {
+    width: 240px;
+    flex-shrink: 0;
+    padding: 3rem 1.5rem 3rem 2rem;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav.toc .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; margin-bottom: 0.65rem; }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    display: flex;
+    gap: 0.55rem;
+  }
+  nav.toc a:hover { color: var(--accent-text); }
+  nav.toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  main { flex: 1; min-width: 0; padding: 3.5rem 2.5rem 6rem; }
+
+  header.hero { margin-bottom: 3rem; }
+  .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 3px;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    line-height: 1.12;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .dek {
+    font-size: 1.08rem;
+    color: var(--text-dim);
+    max-width: 62ch;
+    line-height: 1.55;
+  }
+  .stackline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+  .stackline .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.32rem 0.7rem;
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+  }
+  .stackline .arrow { color: var(--text-dim); }
+
+  section { margin-bottom: 3.25rem; scroll-margin-top: 2rem; }
+  h2 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 1.5rem 0 0.6rem;
+  }
+  p { line-height: 1.7; max-width: 68ch; }
+  p + p { margin-top: 0.9rem; }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 1.1rem 1.3rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    box-shadow: var(--shadow);
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2rem 1.5rem;
+    box-shadow: var(--shadow);
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .arch-row { display: flex; align-items: stretch; gap: 0; min-width: 720px; }
+  .arch-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem 1.2rem;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent-soft);
+  }
+  .arch-node .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .arch-node .name { font-weight: 700; font-size: 1rem; }
+  .arch-node .host { font-size: 0.8rem; color: var(--text-dim); }
+  .arch-connector {
+    flex-shrink: 0;
+    width: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .arch-connector .glyph { font-size: 1.3rem; color: var(--accent); }
+
+  .pipeline { display: flex; flex-direction: column; gap: 0; margin: 1.5rem 0; }
+  .pipeline-step {
+    display: flex;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pipeline-step:last-child { border-bottom: none; }
+  .pipeline-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+  }
+  .pipeline-body strong { display: block; margin-bottom: 0.2rem; }
+  .pipeline-body span { font-size: 0.9rem; color: var(--text-dim); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .grid-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .grid-card .icon { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .grid-card h4 { margin: 0 0 0.35rem; font-size: 0.98rem; font-family: 'IBM Plex Sans', sans-serif; }
+  .grid-card p { font-size: 0.87rem; margin: 0; color: var(--text-dim); max-width: none; }
+
+  .bug {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    border-radius: 8px;
+    padding: 1.1rem 1.3rem;
+    margin: 1rem 0;
+  }
+  .bug .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--warn);
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  .bug p { margin: 0; max-width: none; font-size: 0.92rem; }
+
+  .tablewrap { overflow-x: auto; margin: 1.5rem 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--border); }
+  th { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.82em; }
+
+  footer.page {
+    max-width: 68ch;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 860px) {
+    nav.toc { display: none; }
+    main { padding: 2rem 1.25rem 4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="toc">
+    <div class="eyebrow">Project 5 · Contents</div>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#flow">Login + data flow</a></li>
+      <li><a href="#concepts">Key concepts</a></li>
+      <li><a href="#pwa">PWA mechanics</a></li>
+      <li><a href="#bugs">Bugs, debugged for real</a></li>
+      <li><a href="#deploy">Deployment</a></li>
+      <li><a href="#commands">Commands reference</a></li>
+      <li><a href="#timeline">Build timeline</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <span class="kicker">Project 5 of 10 · Anatomy</span>
+      <h1>Auth-Enabled Task &amp; Notes App (PWA)</h1>
+      <p class="dek">Project 4's three-tier app, now with real accounts: passwords are hashed, every request proves identity with a signed token, and every piece of data belongs to exactly one user. Extended beyond the default brief into a Google Keep-style notes app, then packaged as an installable PWA that runs identically on Windows, Android, and — by the same mechanism — Mac and iOS.</p>
+      <div class="stackline">
+        <span class="pill">Next.js PWA</span><span class="arrow">→</span>
+        <span class="pill">FastAPI + JWT</span><span class="arrow">→</span>
+        <span class="pill">Postgres</span>
+        <span class="arrow" style="margin-left:0.5rem;">·</span>
+        <span class="pill">Vercel</span><span class="arrow">+</span><span class="pill">Render</span><span class="arrow">+</span><span class="pill">Neon</span>
+      </div>
+    </header>
+
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Project 4 proved a real three-tier system could work. Project 5's job was to make that system trustworthy for more than one person at a time — and then take it out of the browser entirely. Two mostly-separate lessons ended up in one project: authentication/authorization (who are you, and what are you allowed to touch), and PWA packaging (turning a website into something installable, with its own icon, its own window, and offline-friendly caching).</p>
+      <p>The scope also grew beyond the original brief mid-project, at the user's request: sticky notes (Google Keep-style, with colors, checklists, pin/archive) and automatic timestamps were added on top of the baseline "auth-enabled task app" plan, and cross-device sync — logging in on a phone and seeing the same data as on a laptop — turned out to require no new code at all, just the architecture already in place.</p>
+    </section>
+
+    <section id="architecture">
+      <h2>Architecture</h2>
+      <div class="arch-diagram">
+        <div class="arch-row">
+          <div class="arch-node">
+            <span class="tag">Tier 1 — PWA client</span>
+            <span class="name">Next.js frontend</span>
+            <span class="host">Vercel · installable</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">→</span>fetch()<br>Bearer token</div>
+          <div class="arch-node">
+            <span class="tag">Tier 2 — verifies identity</span>
+            <span class="name">FastAPI + JWT auth</span>
+            <span class="host">Render</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">→</span>filtered by<br>user_id</div>
+          <div class="arch-node">
+            <span class="tag">Tier 3 — per-user rows</span>
+            <span class="name">Postgres (users, tasks, notes)</span>
+            <span class="host">Neon</span>
+          </div>
+        </div>
+      </div>
+      <p>Same three-tier shape as Project 4, with one addition running alongside every request: a proof of identity. The frontend now carries a token on every call; the backend now verifies that token AND uses it to scope every database query to one specific user's rows.</p>
+    </section>
+
+    <section id="flow">
+      <h2>Login + data flow</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>User submits email + password</strong><span>Login page calls login(email, password) from lib/api.js</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Backend verifies the password</strong><span>bcrypt.checkpw() compares it against the stored hash — never the plain password itself</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Backend issues a signed JWT</strong><span>jwt.encode({"sub": user.id, "exp": ...}, SECRET_KEY) — a token only this backend could have created</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>Frontend stores the token</strong><span>localStorage.setItem("token", ...) — carried on every future request</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>Every later request proves identity</strong><span>apiFetch() attaches Authorization: Bearer &lt;token&gt;; Depends(get_current_user) verifies it and resolves the real User row</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">6</span><div class="pipeline-body"><strong>Every query is scoped to that user</strong><span>.filter(Task.user_id == current_user.id) — the actual authorization step, separate from authentication</span></div></div>
+      </div>
+    </section>
+
+    <section id="concepts">
+      <h2>Key concepts</h2>
+      <div class="grid">
+        <div class="grid-card"><div class="icon">Security</div><h4>bcrypt password hashing</h4><p>One-way hashing means even a full database leak doesn't expose real passwords.</p></div>
+        <div class="grid-card"><div class="icon">Auth</div><h4>JWT — stateless tokens</h4><p>The signed token itself is the proof of login; no server-side session store needed.</p></div>
+        <div class="grid-card"><div class="icon">FastAPI</div><h4>Depends(get_current_user)</h4><p>Dependency injection gates every protected endpoint before its own code ever runs.</p></div>
+        <div class="grid-card"><div class="icon">Authorization</div><h4>Per-user query filtering</h4><p>A valid token proves WHO you are; filtering by user_id decides WHAT you can touch.</p></div>
+        <div class="grid-card"><div class="icon">Data model</div><h4>Foreign keys + relationships</h4><p>Task.user_id and Note.user_id, enforced by Postgres, navigable via SQLAlchemy's relationship().</p></div>
+        <div class="grid-card"><div class="icon">Schema</div><h4>JSON column for checklists</h4><p>A whole checklist stored as one JSON column — simple, at the cost of per-item queryability.</p></div>
+      </div>
+    </section>
+
+    <section id="pwa">
+      <h2>PWA mechanics</h2>
+      <p>Two files turn a normal website into something installable. <code>manifest.json</code> tells the OS what the app is called, what icon to show, and — critically — <code>"display": "standalone"</code>, which is what makes an installed instance open in its own window with no browser chrome at all. <code>sw.js</code> (the service worker) is a background script that intercepts every network request the page makes and decides, per-request, whether to answer from a cache or let it hit the real network.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Request type</th><th>Strategy</th><th>Why</th></tr>
+          <tr><td>App shell (<code>/</code>, icons, manifest)</td><td>Cache-first, precached on install</td><td>Instant repeat loads; the shell itself rarely changes</td></tr>
+          <tr><td>Backend API calls</td><td>Network-only, never cached</td><td>Task/note data must always be current, never served stale</td></tr>
+        </table>
+      </div>
+      <p>Registering the service worker (<code>navigator.serviceWorker.register("/sw.js")</code>) has to run in client-side JS — it's a browser API, so it lives in a small client component (<code>RegisterSW.js</code>) mounted from the root layout. Installability was verified two ways: locally against <code>localhost</code> (proves the mechanics work on one machine) and against the real deployed URL on an Android phone (proves it actually works as a genuine cross-device installable app, which is what matters).</p>
+    </section>
+
+    <section id="bugs">
+      <h2>Bugs, debugged for real</h2>
+      <p>Every one of these was an actual failure hit mid-build, not a scripted lesson.</p>
+      <div class="bug">
+        <span class="label">Windows venv broken by a physical move</span>
+        <p>The venv was first created one directory too high, then <code>move</code>d into place — which broke <code>pip</code>/<code>python</code> entirely, since Windows venv launcher scripts embed the venv's original absolute path. Fixed by deleting and recreating the venv directly in the correct location instead of moving it.</p>
+      </div>
+      <div class="bug">
+        <span class="label">passlib + bcrypt 5.0.0 incompatibility</span>
+        <p>Unmaintained passlib crashed reading a <code>bcrypt.__about__</code> attribute bcrypt 5.0 removed, surfacing as a confusing <code>ValueError: password cannot be longer than 72 bytes</code>. Fixed by dropping passlib and calling <code>bcrypt.hashpw</code>/<code>bcrypt.checkpw</code> directly.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Case-sensitive import + dark-mode CSS</span>
+        <p>A component saved as <code>Taskitem.js</code> (lowercase i) broke the build — the same case-sensitivity trap as Project 3. Separately, the default dark-mode media query in <code>globals.css</code> made the whole Tasks page nearly unreadable on a dark-mode browser; fixed by removing that block.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Stale service-worker cache in dev mode</span>
+        <p>The installed app got stuck on "Loading..." even with the dev server running, because the cache-first service worker had served a broken cached copy of Next.js's dynamically-regenerated dev-mode JS chunks. Fixed by unregistering the service worker and clearing site data — a dev-only failure mode, gone once pointed at a real deployed build.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Vercel Root Directory saved the wrong path</span>
+        <p>A cut-off browser modal for picking the Root Directory ended up saving just <code>frontend</code> instead of the full nested <code>project-5-auth-notes-pwa/frontend</code>, failing the first deploy. Fixed by deleting and re-importing the project, confirming the full path before deploying.</p>
+      </div>
+      <div class="bug">
+        <span class="label">CORS blocked the deployed frontend</span>
+        <p>Same class of bug as Project 4: the backend's <code>allow_origins</code> only had <code>localhost:3000</code> until the real Vercel URL was added and the backend redeployed.</p>
+      </div>
+    </section>
+
+    <section id="deploy">
+      <h2>Deployment</h2>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Piece</th><th>Host</th><th>Root Directory</th><th>Key setting</th></tr>
+          <tr><td>Backend</td><td>Render</td><td><code>project-5-auth-notes-pwa/backend</code></td><td><code>DATABASE_URL</code> + <code>SECRET_KEY</code> env vars</td></tr>
+          <tr><td>Frontend</td><td>Vercel</td><td><code>project-5-auth-notes-pwa/frontend</code></td><td><code>NEXT_PUBLIC_API_URL</code> env var</td></tr>
+        </table>
+      </div>
+      <p>Verified live end-to-end: signed in on the deployed Vercel URL and saw the exact same tasks/notes created during local testing (same Neon database, same account) — proof the whole chain (auth, per-user isolation, CORS) works for real, not just locally. Then installed the PWA from that same deployed URL on an Android phone and confirmed the same data appeared there too.</p>
+    </section>
+
+    <section id="commands">
+      <h2>Commands reference</h2>
+      <pre><code># Backend — one-time setup
+python -m venv venv
+venv\Scripts\activate
+pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv bcrypt python-jose python-multipart "pydantic[email]"
+pip freeze &gt; requirements.txt   # only trust this AFTER confirming (venv) shows in the prompt
+
+# Backend — run locally
+uvicorn main:app --reload
+
+# Frontend — run locally
+npm run dev
+
+# Generate a real secret key
+python -c "import secrets; print(secrets.token_hex(32))"
+
+# Render start command (not the default!)
+uvicorn main:app --host 0.0.0.0 --port $PORT</code></pre>
+    </section>
+
+    <section id="timeline">
+      <h2>Build timeline</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>Scope negotiation</strong><span>User requested sticky notes, automatic dates, cross-device use — clarified into concrete features before building</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Database + auth backend</strong><span>Neon project, users/tasks/notes models with foreign keys, bcrypt + JWT, protected CRUD for both tasks and notes</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Verified via Swagger</strong><span>Signup, login, 401-when-unauthenticated, task and note CRUD all proven against the real database before any frontend existed</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>Frontend auth + tasks UI</strong><span>login/signup pages, token handling in lib/api.js, Tasks page rebuilt around due dates and logout</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>Sticky notes UI</strong><span>Text/checklist toggle, color picker, pin/archive, wired into the same page alongside Tasks</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">6</span><div class="pipeline-body"><strong>PWA packaging</strong><span>Custom icon set from the user's own logo, manifest.json, service worker, verified installable locally</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">7</span><div class="pipeline-body"><strong>Deployed and verified everywhere</strong><span>Backend to Render, frontend to Vercel, CORS fixed, installed and confirmed on desktop and Android with the same account syncing data</span></div></div>
+      </div>
+    </section>
+
+    <footer class="page">Web &amp; App Dev Mentor Track · Project 5 of 10 · 2026-08-31</footer>
+  </main>
+</div>
+</body>
+</html>

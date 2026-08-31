@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 5 Progress — Auth-Enabled Task &amp; Notes App (PWA)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fafafa;
+    padding: 2rem;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #666; margin-bottom: 1.5rem; }
+  .status-badge {
+    display: inline-block;
+    background: #0d9488;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+  ul.checklist { list-style: none; }
+  ul.checklist li {
+    padding: 0.35rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  ul.checklist li::before {
+    content: "✓";
+    color: #0d9488;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+  .meta-item .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.03em; }
+  .meta-item .value { font-size: 1.1rem; font-weight: 600; margin-top: 0.15rem; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .live-link {
+    display: inline-block;
+    background: #1a1a1a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  .live-link:hover { background: #333; text-decoration: none; }
+  .concept-list { list-style: none; }
+  .concept-list li { padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
+  .concept-list li:last-child { border-bottom: none; }
+  .bug-note {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+  }
+  .bug-note + .bug-note { margin-top: 0.6rem; }
+  .arch-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0.75rem 0;
+  }
+  .arch-box {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    color: #0f766e;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+  }
+  .quiz-item { padding: 0.5rem 0; }
+  .quiz-item .q { font-size: 0.92rem; }
+  footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Project 5: Auth-Enabled Task &amp; Notes App (PWA)</h1>
+  <p class="subtitle">Web &amp; App Dev Mentor Track — status tracker</p>
+  <span class="status-badge">✓ Complete &amp; Deployed</span>
+
+  <div class="card">
+    <h2>At a glance</h2>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="label">Days spent</div>
+        <div class="value">~2 / 4–5 budget</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Started</div>
+        <div class="value">2026-08-30</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Completed</div>
+        <div class="value">2026-08-31</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Stack</div>
+        <div class="value">Next.js PWA / FastAPI / Postgres</div>
+      </div>
+    </div>
+    <div class="arch-row">
+      <span class="arch-box">Next.js PWA (Vercel)</span> → <span class="arch-box">FastAPI + JWT auth (Render)</span> → <span class="arch-box">Postgres (Neon)</span>
+    </div>
+    <a class="live-link" href="https://web-app-dev-mentor-p5.vercel.app/" target="_blank">Visit Live App →</a>
+    <a class="live-link" href="https://web-app-dev-mentor-p5-backend.onrender.com/docs" target="_blank">Backend API Docs →</a>
+  </div>
+
+  <div class="card">
+    <h2>Build checklist</h2>
+    <ul class="checklist">
+      <li>Scope extended beyond the default plan (user request): Google Keep-style sticky notes, automatic timestamps, cross-device sync via login</li>
+      <li>Neon Postgres database (separate project) with users, tasks, notes tables — foreign keys + relationships</li>
+      <li>Password hashing with bcrypt, JWT-based login (signup/login endpoints, OAuth2PasswordBearer)</li>
+      <li>Every protected endpoint filtered by current_user.id — real per-user data isolation, verified via a 401 on an unauthenticated request</li>
+      <li>Tasks CRUD with due dates and automatic created/updated timestamps</li>
+      <li>Notes CRUD: text and checklist types, color picker, pin, archive — JSON column for checklist items</li>
+      <li>Frontend auth flow: signup/login pages, token stored in localStorage, auto-redirect to /login on 401</li>
+      <li>PWA packaging: manifest.json, service worker (network-first for API calls, cache-first for the app shell), custom icon set generated from the user's own logo</li>
+      <li>Installed and verified on both desktop (Windows/Chrome) and mobile (Android/Chrome)</li>
+      <li>Deployed as two services — backend to Render, frontend to Vercel — CORS updated, verified live end-to-end including cross-device login/sync</li>
+    </ul>
+    <div class="bug-note">
+      <strong>Bug fixed — passlib/bcrypt incompatibility:</strong> unmaintained passlib
+      crashed against bcrypt 5.0. Fixed by calling <code>bcrypt.hashpw</code>/<code>bcrypt.checkpw</code> directly instead.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — case-sensitive import + dark-mode CSS:</strong> a component
+      filename case mismatch and the default dark-mode media query both broke the Tasks
+      page after Project 3's exact same import lesson — same root cause, different project.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — stale service-worker cache in dev mode:</strong> the installed app
+      got stuck loading against locally-running dev servers; resolved by clearing the
+      service worker cache (a dev-only failure mode, gone once deployed).
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — Vercel Root Directory + CORS:</strong> a cut-off folder-picker
+      modal saved the wrong root directory on the first deploy attempt; and, as in Project
+      4, the backend's CORS allow-list needed the real deployed frontend URL added before
+      the live app could talk to the live backend.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Concepts introduced</h2>
+    <p style="margin-bottom:0.75rem; color:#555;">Full plain-English explanations in <a href="CONCEPTS.md">CONCEPTS.md</a>. Summary:</p>
+    <ul class="concept-list">
+      <li>Password hashing with bcrypt — never store plain-text passwords</li>
+      <li>JWT — stateless, signed tokens as proof of identity, verified on every request</li>
+      <li>FastAPI dependency injection (Depends) for auth — get_current_user gates every protected endpoint</li>
+      <li>Per-user data isolation — filtering every query by the logged-in user's id</li>
+      <li>Foreign keys and SQLAlchemy relationships — real multi-table structure for the first time</li>
+      <li>The JSON column type — storing a whole checklist as one column, tradeoffs vs. a real table</li>
+      <li>Database-generated timestamps (server_default / onupdate)</li>
+      <li>PWA manifest.json and standalone display mode</li>
+      <li>Service workers — background caching, and why API calls must bypass the cache</li>
+      <li>Cross-device sync as an emergent property of shared backend + database, not new code</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Checkpoint quiz</h2>
+    <div class="quiz-item"><div class="q">1. Why is a password hashed instead of encrypted — what's the practical difference for this app?</div></div>
+    <div class="quiz-item"><div class="q">2. What actually stops User A from seeing User B's tasks, given both have valid, currently-logged-in JWTs?</div></div>
+    <div class="quiz-item"><div class="q">3. What is a foreign key, and what does Task.user_id = ForeignKey("users.id") actually enforce?</div></div>
+    <div class="quiz-item"><div class="q">4. Why does the service worker deliberately NOT cache requests to the backend API?</div></div>
+    <div class="quiz-item"><div class="q">5. No "sync" code was written anywhere. Why does logging in on your phone show the same tasks as your laptop?</div></div>
+    <p style="color:#888; font-size:0.9rem; margin-top:0.5rem;">Answered verbally in the mentoring session — see debrief.</p>
+  </div>
+
+  <div class="card">
+    <h2>What you could break/change next</h2>
+    <ul class="checklist">
+      <li>Add a "forgot password" flow, or at minimum a password-change endpoint</li>
+      <li>Add a dedicated "Archived notes" view instead of archived notes just disappearing</li>
+      <li>Shorten the JWT expiry (currently 7 days) and add a refresh-token flow</li>
+      <li>Add offline write support — currently the service worker only caches reads; a true offline-first app would queue writes made while offline</li>
+    </ul>
+  </div>
+
+  <footer>Web &amp; App Dev Mentor Track · Project 5 of 10 · Last updated 2026-08-31</footer>
+</div>
+</body>
+</html>
