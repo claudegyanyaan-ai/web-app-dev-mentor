@@ -312,3 +312,92 @@ async def websocket_endpoint(
             await manager.broadcast(conversation_id, out)
     except WebSocketDisconnect:
         manager.disconnect(conversation_id, websocket)
+
+class PresenceManager:
+    def __init__(self):
+        self.online_users: Dict[int, List[WebSocket]] = {}
+
+    def add(self, user_id: int, websocket: WebSocket):
+        self.online_users.setdefault(user_id, []).append(websocket)
+
+    def remove(self, user_id: int, websocket: WebSocket):
+        connections = self.online_users.get(user_id, [])
+        if websocket in connections:
+            connections.remove(websocket)
+        if not connections:
+            self.online_users.pop(user_id, None)
+
+    def is_online(self, user_id: int) -> bool:
+        return bool(self.online_users.get(user_id))
+
+    async def broadcast_to_contacts(self, db: Session, user_id: int, event: dict):
+        contact_conversation_ids = db.query(models.ConversationParticipant.conversation_id).filter(
+            models.ConversationParticipant.user_id == user_id
+        )
+        contact_ids = {
+            cp.user_id
+            for cp in db.query(models.ConversationParticipant).filter(
+                models.ConversationParticipant.conversation_id.in_(contact_conversation_ids)
+            ).all()
+            if cp.user_id != user_id
+        }
+        for contact_id in contact_ids:
+            for connection in self.online_users.get(contact_id, []):
+                await connection.send_json(event)
+
+
+presence_manager = PresenceManager()
+
+
+@app.websocket("/ws/presence")
+async def presence_endpoint(websocket: WebSocket, token: str = Query(...), db: Session = Depends(get_db)):
+    await websocket.accept()
+
+    user = get_user_from_token(token, db)
+    if not user:
+        await websocket.close(code=4001)
+        return
+
+    presence_manager.add(user.id, websocket)
+    await presence_manager.broadcast_to_contacts(
+        db, user.id, {"type": "presence", "user_id": user.id, "username": user.username, "online": True}
+    )
+
+    try:
+        while True:
+            await websocket.receive_text()  # this socket only pushes events out; ignore anything sent in
+    except WebSocketDisconnect:
+        presence_manager.remove(user.id, websocket)
+        if not presence_manager.is_online(user.id):
+            user.last_seen = datetime.utcnow()
+            db.commit()
+            await presence_manager.broadcast_to_contacts(
+                db, user.id,
+                {"type": "presence", "user_id": user.id, "username": user.username,
+                 "online": False, "last_seen": user.last_seen.isoformat()},
+            )
+
+
+@app.get("/conversations/{conversation_id}/presence")
+def get_conversation_presence(
+    conversation_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    get_conversation_or_404(conversation_id, db, current_user)
+
+    participants = (
+        db.query(models.User)
+        .join(models.ConversationParticipant, models.ConversationParticipant.user_id == models.User.id)
+        .filter(models.ConversationParticipant.conversation_id == conversation_id)
+        .all()
+    )
+    return [
+        {
+            "id": u.id,
+            "username": u.username,
+            "online": presence_manager.is_online(u.id),
+            "last_seen": u.last_seen.isoformat() if u.last_seen else None,
+        }
+        for u in participants
+    ]

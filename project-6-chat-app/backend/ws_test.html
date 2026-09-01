@@ -11,19 +11,28 @@
   <div id="log" style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;"></div>
 
   <script>
-    let ws;
+    let ws, presenceWs;
     function log(text) {
       document.getElementById('log').innerHTML += `<div>${text}</div>`;
     }
     function connect() {
       const token = document.getElementById('token').value;
       const convId = document.getElementById('convId').value;
+
       ws = new WebSocket(`ws://127.0.0.1:8000/ws/conversations/${convId}?token=${token}`);
-      ws.onopen = () => log('connected');
-      ws.onclose = (e) => log('closed: ' + e.code);
+      ws.onopen = () => log('conversation socket: connected');
+      ws.onclose = (e) => log('conversation socket: closed ' + e.code);
       ws.onmessage = (event) => {
         const m = JSON.parse(event.data);
         log(`<b>${m.sender_username}:</b> ${m.content}`);
+      };
+
+      presenceWs = new WebSocket(`ws://127.0.0.1:8000/ws/presence?token=${token}`);
+      presenceWs.onopen = () => log('presence socket: connected');
+      presenceWs.onclose = (e) => log('presence socket: closed ' + e.code);
+      presenceWs.onmessage = (event) => {
+        const p = JSON.parse(event.data);
+        log(`<i>presence: ${p.username} is ${p.online ? 'ONLINE' : 'OFFLINE'}</i>`);
       };
     }
     function send() {
