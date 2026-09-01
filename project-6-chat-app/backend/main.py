@@ -1,29 +1,38 @@
-import secrets
+import os
 import json
+import secrets
 from datetime import datetime, timedelta
-from sqlalchemy import func
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
-from sqlalchemy import func
 from typing import Dict, List
-from jose import JWTError, jwt
-from auth import SECRET_KEY, ALGORITHM
 
-from fastapi import FastAPI, Depends, HTTPException
+import cloudinary
+import cloudinary.uploader
+from fastapi import (
+    FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query,
+    UploadFile, File, Form,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from jose import JWTError, jwt
 
 from database import engine, Base, get_db
 import models, schemas
-from auth import hash_password, verify_password, create_access_token, get_current_user
+from auth import hash_password, verify_password, create_access_token, get_current_user, SECRET_KEY, ALGORITHM
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Project 6 - Chat App API")
 
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # add the deployed frontend URL once we deploy
+    allow_origins=["http://localhost:3000", "null"],  # "null" = local file:// testing; remove once we deploy
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -148,8 +157,6 @@ def create_conversation(
     if not payload.is_group and len(other_users) != 1:
         raise HTTPException(status_code=400, detail="A 1:1 conversation needs exactly one other participant")
 
-    # For 1:1 chats, reuse an existing conversation between these two users instead of
-    # creating a duplicate one every time.
     if not payload.is_group:
         other_user_id = other_users[0].id
         existing = (
@@ -204,7 +211,8 @@ def send_message(
 
     return schemas.MessageOut(
         id=message.id, conversation_id=message.conversation_id, sender_id=message.sender_id,
-        sender_username=current_user.username, content=message.content, created_at=message.created_at,
+        sender_username=current_user.username, content=message.content,
+        attachment_url=None, attachment_type=None, created_at=message.created_at,
     )
 
 
@@ -226,19 +234,64 @@ def list_messages(
     return [
         schemas.MessageOut(
             id=m.id, conversation_id=m.conversation_id, sender_id=m.sender_id,
-            sender_username=uname, content=m.content, created_at=m.created_at,
+            sender_username=uname, content=m.content,
+            attachment_url=m.attachment_url, attachment_type=m.attachment_type,
+            created_at=m.created_at,
         )
         for m, uname in rows
     ]
 
 
+@app.post("/conversations/{conversation_id}/messages/upload", response_model=schemas.MessageOut)
+async def upload_message_attachment(
+    conversation_id: int,
+    file: UploadFile = File(...),
+    caption: str = Form(""),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    get_conversation_or_404(conversation_id, db, current_user)
+
+    is_image = (file.content_type or "").startswith("image/")
+    upload_result = cloudinary.uploader.upload(
+        file.file,
+        resource_type="image" if is_image else "raw",
+        folder=f"project6-chat/conversation_{conversation_id}",
+    )
+
+    message = models.Message(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        content=caption,
+        attachment_url=upload_result["secure_url"],
+        attachment_type="image" if is_image else "file",
+    )
+    db.add(message)
+    db.commit()
+    db.refresh(message)
+
+    out_dict = {
+        "id": message.id,
+        "conversation_id": message.conversation_id,
+        "sender_id": message.sender_id,
+        "sender_username": current_user.username,
+        "content": message.content,
+        "attachment_url": message.attachment_url,
+        "attachment_type": message.attachment_type,
+        "created_at": message.created_at.isoformat(),
+    }
+    await manager.broadcast(conversation_id, out_dict)
+
+    return schemas.MessageOut(**out_dict)
+
+
+# ---------- WebSocket: live messaging ----------
 
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[int, List[WebSocket]] = {}
 
-    async def connect(self, conversation_id: int, websocket: WebSocket):
-        await websocket.accept()
+    def connect(self, conversation_id: int, websocket: WebSocket):
         self.active_connections.setdefault(conversation_id, []).append(websocket)
 
     def disconnect(self, conversation_id: int, websocket: WebSocket):
@@ -274,6 +327,8 @@ async def websocket_endpoint(
     token: str = Query(...),
     db: Session = Depends(get_db),
 ):
+    await websocket.accept()  # accept FIRST, so any close() after this carries a real reason code
+
     user = get_user_from_token(token, db)
     if not user:
         await websocket.close(code=4001)  # invalid/missing token
@@ -287,7 +342,7 @@ async def websocket_endpoint(
         await websocket.close(code=4003)  # not a member of this conversation
         return
 
-    await manager.connect(conversation_id, websocket)
+    manager.connect(conversation_id, websocket)
     try:
         while True:
             data = await websocket.receive_text()
@@ -307,11 +362,16 @@ async def websocket_endpoint(
                 "sender_id": message.sender_id,
                 "sender_username": user.username,
                 "content": message.content,
+                "attachment_url": None,
+                "attachment_type": None,
                 "created_at": message.created_at.isoformat(),
             }
             await manager.broadcast(conversation_id, out)
     except WebSocketDisconnect:
         manager.disconnect(conversation_id, websocket)
+
+
+# ---------- WebSocket: presence ----------
 
 class PresenceManager:
     def __init__(self):

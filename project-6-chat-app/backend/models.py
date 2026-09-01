@@ -60,7 +60,9 @@ class Message(Base):
     id = Column(Integer, primary_key=True, index=True)
     conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False)
     sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    content = Column(String, nullable=False)
+    content = Column(String, nullable=False)  # can be empty "" when it's just an attachment
+    attachment_url = Column(String, nullable=True)
+    attachment_type = Column(String, nullable=True)  # "image" or "file"
     created_at = Column(DateTime, server_default=func.now())
 
     conversation = relationship("Conversation", back_populates="messages")

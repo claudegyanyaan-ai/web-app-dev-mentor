@@ -73,6 +73,8 @@ class MessageOut(BaseModel):
     sender_id: int
     sender_username: str
     content: str
+    attachment_url: Optional[str] = None
+    attachment_type: Optional[str] = None
     created_at: datetime
 
     class Config:
