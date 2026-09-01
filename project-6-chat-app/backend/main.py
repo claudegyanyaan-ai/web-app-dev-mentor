@@ -1,6 +1,12 @@
 import secrets
+import json
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
+from sqlalchemy import func
+from typing import Dict, List
+from jose import JWTError, jwt
+from auth import SECRET_KEY, ALGORITHM
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -224,3 +230,85 @@ def list_messages(
         )
         for m, uname in rows
     ]
+
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[int, List[WebSocket]] = {}
+
+    async def connect(self, conversation_id: int, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.setdefault(conversation_id, []).append(websocket)
+
+    def disconnect(self, conversation_id: int, websocket: WebSocket):
+        connections = self.active_connections.get(conversation_id, [])
+        if websocket in connections:
+            connections.remove(websocket)
+        if not connections:
+            self.active_connections.pop(conversation_id, None)
+
+    async def broadcast(self, conversation_id: int, message: dict):
+        for connection in self.active_connections.get(conversation_id, []):
+            await connection.send_json(message)
+
+
+manager = ConnectionManager()
+
+
+def get_user_from_token(token: str, db: Session):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+    except JWTError:
+        return None
+    return db.query(models.User).filter(models.User.id == int(user_id)).first()
+
+
+@app.websocket("/ws/conversations/{conversation_id}")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    conversation_id: int,
+    token: str = Query(...),
+    db: Session = Depends(get_db),
+):
+    user = get_user_from_token(token, db)
+    if not user:
+        await websocket.close(code=4001)  # invalid/missing token
+        return
+
+    is_participant = db.query(models.ConversationParticipant).filter(
+        models.ConversationParticipant.conversation_id == conversation_id,
+        models.ConversationParticipant.user_id == user.id,
+    ).first()
+    if not is_participant:
+        await websocket.close(code=4003)  # not a member of this conversation
+        return
+
+    await manager.connect(conversation_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            payload = json.loads(data)
+            content = (payload.get("content") or "").strip()
+            if not content:
+                continue
+
+            message = models.Message(conversation_id=conversation_id, sender_id=user.id, content=content)
+            db.add(message)
+            db.commit()
+            db.refresh(message)
+
+            out = {
+                "id": message.id,
+                "conversation_id": message.conversation_id,
+                "sender_id": message.sender_id,
+                "sender_username": user.username,
+                "content": message.content,
+                "created_at": message.created_at.isoformat(),
+            }
+            await manager.broadcast(conversation_id, out)
+    except WebSocketDisconnect:
+        manager.disconnect(conversation_id, websocket)

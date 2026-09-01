@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><title>WS Test</title></head>
+<body style="font-family: sans-serif; max-width: 500px; margin: 40px auto;">
+  <h3>WebSocket test</h3>
+  <label>JWT token: <input id="token" style="width: 100%"></label><br><br>
+  <label>Conversation ID: <input id="convId" value="1"></label>
+  <button onclick="connect()">Connect</button><br><br>
+  <input id="msg" style="width: 70%" placeholder="type a message">
+  <button onclick="send()">Send</button>
+  <div id="log" style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;"></div>
+
+  <script>
+    let ws;
+    function log(text) {
+      document.getElementById('log').innerHTML += `<div>${text}</div>`;
+    }
+    function connect() {
+      const token = document.getElementById('token').value;
+      const convId = document.getElementById('convId').value;
+      ws = new WebSocket(`ws://127.0.0.1:8000/ws/conversations/${convId}?token=${token}`);
+      ws.onopen = () => log('connected');
+      ws.onclose = (e) => log('closed: ' + e.code);
+      ws.onmessage = (event) => {
+        const m = JSON.parse(event.data);
+        log(`<b>${m.sender_username}:</b> ${m.content}`);
+      };
+    }
+    function send() {
+      const content = document.getElementById('msg').value;
+      ws.send(JSON.stringify({content}));
+      document.getElementById('msg').value = '';
+    }
+  </script>
+</body>
+</html>
