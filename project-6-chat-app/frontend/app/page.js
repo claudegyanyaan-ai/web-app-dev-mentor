@@ -28,6 +28,9 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [showGroupForm, setShowGroupForm] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [groupUsernames, setGroupUsernames] = useState("");
   const [loading, setLoading] = useState(true);
 
   const conversationSocketRef = useRef(null);
@@ -169,6 +172,38 @@ export default function ChatPage() {
     }
   }
 
+  async function handleCreateGroup(e) {
+    e.preventDefault();
+    if (!groupName.trim() || !groupUsernames.trim()) {
+      alert("Please enter a group name and at least one username.");
+      return;
+    }
+
+    const usernames = groupUsernames
+      .split(",")
+      .map((u) => u.trim())
+      .filter(Boolean);
+
+    if (usernames.length === 0) {
+      alert("Please enter at least one username.");
+      return;
+    }
+
+    try {
+      const convo = await createConversation(usernames, true, groupName.trim());
+      setConversations((prev) => {
+        const exists = prev.some((c) => c.id === convo.id);
+        return exists ? prev : [convo, ...prev];
+      });
+      setActiveConversationId(convo.id);
+      setGroupName("");
+      setGroupUsernames("");
+      setShowGroupForm(false);
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
   function removeConversationLocally(conversationId) {
     setConversations((prev) => prev.filter((c) => c.id !== conversationId));
     if (activeConversationId === conversationId) {
@@ -240,18 +275,52 @@ export default function ChatPage() {
           </button>
         </div>
 
-        <form onSubmit={handleStartConversation} className="p-4 border-b border-gray-200 flex gap-2">
-          <input
-            type="text"
-            placeholder="Start chat with username"
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
-          />
-          <button type="submit" className="bg-teal-600 text-white rounded-lg px-3 py-2 text-sm hover:bg-teal-700">
-            Start
+        <form onSubmit={handleStartConversation} className="p-4 border-b border-gray-200 flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Start chat with username"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+            <button type="submit" className="bg-teal-600 text-white rounded-lg px-3 py-2 text-sm hover:bg-teal-700">
+              Start
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowGroupForm((v) => !v)}
+            className="text-sm text-teal-600 hover:underline text-left"
+          >
+            {showGroupForm ? "Cancel" : "+ New Group"}
           </button>
         </form>
+
+        {showGroupForm && (
+          <form onSubmit={handleCreateGroup} className="p-4 border-b border-gray-200 flex flex-col gap-2 bg-gray-50">
+            <input
+              type="text"
+              placeholder="Group name"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+            <input
+              type="text"
+              placeholder="Usernames, comma separated"
+              value={groupUsernames}
+              onChange={(e) => setGroupUsernames(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+            <button
+              type="submit"
+              className="bg-teal-600 text-white rounded-lg px-3 py-2 text-sm hover:bg-teal-700"
+            >
+              Create Group
+            </button>
+          </form>
+        )}
 
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 && (
