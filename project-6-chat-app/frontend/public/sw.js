@@ -19,8 +19,6 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Never intercept WebSocket handshakes - only "fetch" GET/POST/etc reach here,
-// but be explicit anyway since ws:// requests must always go straight through.
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
@@ -28,26 +26,27 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first for API calls (so chat data is always fresh when online),
-  // cache-first for everything else (fast repeat loads of the app shell).
   const isApiCall = url.port === "8000" || url.hostname.includes("onrender.com");
-
   if (isApiCall) {
-    return; // let API requests go straight to the network, untouched
+    return; // API calls always go straight to the network
   }
 
+  if (event.request.method !== "GET") {
+    return;
+  }
+
+  // Network-first: always try to get the latest app shell/JS when online,
+  // so new features show up immediately after every deploy. Only fall back
+  // to the cache when the network is unavailable (true offline use).
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).then((response) => {
-          if (response.ok && event.request.method === "GET") {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-      );
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
