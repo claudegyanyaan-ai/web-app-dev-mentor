@@ -36,7 +36,7 @@ cloudinary.config(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "null"],
+    allow_origins=["http://localhost:3000", "https://web-app-dev-mentor.vercel.app", "null"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
