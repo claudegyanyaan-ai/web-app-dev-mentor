@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real-Time Chat App Anatomy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --surface-2: #f2f0ea;
+    --border: #ddd8ce;
+    --text: #241f1a;
+    --text-dim: #6b6357;
+    --accent: #0d9488;
+    --accent-soft: #e6f6f4;
+    --accent-text: #0f766e;
+    --warn: #a35a1e;
+    --warn-soft: #fbeee0;
+    --code-bg: #241f1a;
+    --code-text: #f2ede2;
+    --shadow: 0 1px 2px rgba(36,31,26,0.06), 0 8px 24px rgba(36,31,26,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f;
+      --surface: #211d17;
+      --surface-2: #2a251d;
+      --border: #3a3327;
+      --text: #ede7db;
+      --text-dim: #b3a894;
+      --accent: #5fc9c0;
+      --accent-soft: #1e3634;
+      --accent-text: #8fe0d8;
+      --warn: #e0a25c;
+      --warn-soft: #3a2c18;
+      --code-bg: #0f0d0a;
+      --code-text: #ede7db;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f;
+    --surface: #211d17;
+    --surface-2: #2a251d;
+    --border: #3a3327;
+    --text: #ede7db;
+    --text-dim: #b3a894;
+    --accent: #5fc9c0;
+    --accent-soft: #1e3634;
+    --accent-text: #8fe0d8;
+    --warn: #e0a25c;
+    --warn-soft: #3a2c18;
+    --code-bg: #0f0d0a;
+    --code-text: #ede7db;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-text); }
+
+  .shell { display: flex; max-width: 1180px; margin: 0 auto; }
+
+  nav.toc {
+    width: 240px;
+    flex-shrink: 0;
+    padding: 3rem 1.5rem 3rem 2rem;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav.toc .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; margin-bottom: 0.65rem; }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    display: flex;
+    gap: 0.55rem;
+  }
+  nav.toc a:hover { color: var(--accent-text); }
+  nav.toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  main { flex: 1; min-width: 0; padding: 3.5rem 2.5rem 6rem; }
+
+  header.hero { margin-bottom: 3rem; }
+  .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 3px;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    line-height: 1.12;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .dek {
+    font-size: 1.08rem;
+    color: var(--text-dim);
+    max-width: 62ch;
+    line-height: 1.55;
+  }
+  .stackline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+  .stackline .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.32rem 0.7rem;
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+  }
+  .stackline .arrow { color: var(--text-dim); }
+
+  section { margin-bottom: 3.25rem; scroll-margin-top: 2rem; }
+  h2 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 1.5rem 0 0.6rem;
+  }
+  p { line-height: 1.7; max-width: 68ch; }
+  p + p { margin-top: 0.9rem; }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 1.1rem 1.3rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    box-shadow: var(--shadow);
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2rem 1.5rem;
+    box-shadow: var(--shadow);
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .arch-row { display: flex; align-items: stretch; gap: 0; min-width: 720px; }
+  .arch-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem 1.2rem;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent-soft);
+  }
+  .arch-node .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .arch-node .name { font-weight: 700; font-size: 1rem; }
+  .arch-node .host { font-size: 0.8rem; color: var(--text-dim); }
+  .arch-connector {
+    flex-shrink: 0;
+    width: 92px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .arch-connector .glyph { font-size: 1.3rem; color: var(--accent); }
+
+  .pipeline { display: flex; flex-direction: column; gap: 0; margin: 1.5rem 0; }
+  .pipeline-step {
+    display: flex;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pipeline-step:last-child { border-bottom: none; }
+  .pipeline-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+  }
+  .pipeline-body strong { display: block; margin-bottom: 0.2rem; }
+  .pipeline-body span { font-size: 0.9rem; color: var(--text-dim); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .grid-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .grid-card .icon { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .grid-card h4 { margin: 0 0 0.35rem; font-size: 0.98rem; font-family: 'IBM Plex Sans', sans-serif; }
+  .grid-card p { font-size: 0.87rem; margin: 0; color: var(--text-dim); max-width: none; }
+
+  .bug {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    border-radius: 8px;
+    padding: 1.1rem 1.3rem;
+    margin: 1rem 0;
+  }
+  .bug .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--warn);
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  .bug p { margin: 0; max-width: none; font-size: 0.92rem; }
+
+  .tablewrap { overflow-x: auto; margin: 1.5rem 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--border); }
+  th { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.82em; }
+
+  footer.page {
+    max-width: 68ch;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 860px) {
+    nav.toc { display: none; }
+    main { padding: 2rem 1.25rem 4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="toc">
+    <div class="eyebrow">Project 6 · Contents</div>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#schema">Data model</a></li>
+      <li><a href="#flow">Message + presence flow</a></li>
+      <li><a href="#concepts">Key concepts</a></li>
+      <li><a href="#sw">Service worker: cache-first → network-first</a></li>
+      <li><a href="#bugs">Bugs, debugged for real</a></li>
+      <li><a href="#deploy">Deployment</a></li>
+      <li><a href="#commands">Commands reference</a></li>
+      <li><a href="#timeline">Build timeline</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <span class="kicker">Project 6 of 10 · Anatomy</span>
+      <h1>Real-Time Chat App (1:1 + Group, PWA)</h1>
+      <p class="dek">A WhatsApp/Telegram-style chat app built on top of Project 5's auth foundation: 1:1 and group conversations, live messaging over WebSockets, online/offline presence, image/file sharing via Cloudinary, and WhatsApp-style delete-for-me / delete-for-everyone — packaged as an installable PWA and deployed for real, then hardened against a genuine stale-cache bug hit twice in production.</p>
+      <div class="stackline">
+        <span class="pill">Next.js PWA</span><span class="arrow">→</span>
+        <span class="pill">FastAPI + JWT + WebSockets</span><span class="arrow">→</span>
+        <span class="pill">Postgres</span>
+        <span class="arrow" style="margin-left:0.5rem;">·</span>
+        <span class="pill">Vercel</span><span class="arrow">+</span><span class="pill">Render</span><span class="arrow">+</span><span class="pill">Neon</span><span class="arrow">+</span><span class="pill">Cloudinary</span>
+      </div>
+    </header>
+
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Projects 4 and 5 built a solid three-tier, authenticated foundation. Project 6's job was to make the app <em>live</em> — messages appear on other people's screens the instant they're sent, not on next page load — and to model something genuinely more complex than a single owner's rows: a conversation with multiple participants, some of whom can see it and some of whom can't (once they've deleted it for themselves), carrying messages that might have an attached file living on a third-party host.</p>
+      <p>Scope, agreed up front: 1:1 and small-group conversations, JWT auth reused from Project 5, an in-app password-reset flow (no email service — the reset token is displayed directly), online/offline presence, and image/file sharing. Typing indicators and read receipts were explicitly deferred. The app had to work as an installable PWA across web, Windows, Mac, and Android, and needed a delete-conversation feature matching WhatsApp's two-mode behavior.</p>
+    </section>
+
+    <section id="architecture">
+      <h2>Architecture</h2>
+      <div class="arch-diagram">
+        <div class="arch-row">
+          <div class="arch-node">
+            <span class="tag">Tier 1 — PWA client</span>
+            <span class="name">Next.js frontend</span>
+            <span class="host">Vercel · installable</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">⇄</span>WebSocket +<br>Bearer token</div>
+          <div class="arch-node">
+            <span class="tag">Tier 2 — live + REST</span>
+            <span class="name">FastAPI + JWT + WebSockets</span>
+            <span class="host">Render</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">→</span>SQLAlchemy<br>ORM</div>
+          <div class="arch-node">
+            <span class="tag">Tier 3 — durable data</span>
+            <span class="name">Postgres (users, conversations, messages)</span>
+            <span class="host">Neon</span>
+          </div>
+        </div>
+      </div>
+      <p>Same three-tier shape as Project 5, but Tier 2 now speaks two protocols: normal HTTP for everything that fits request/response (signup, login, listing conversations, sending an image), and WebSockets for the two things that genuinely need to push data unprompted — new messages and presence changes. A fourth party, Cloudinary, sits off to the side purely for file storage; the backend never stores attachment bytes itself, only the URL Cloudinary hands back.</p>
+    </section>
+
+    <section id="schema">
+      <h2>Data model</h2>
+      <p>Four tables carry the whole app. The join-table shape (<code>ConversationParticipant</code> sitting between <code>Conversation</code> and <code>User</code>) is the one genuinely new modeling decision this project — it's what lets a conversation scale from exactly two people to any number of group members without a schema change, and it's what makes "delete for me" possible as a per-row flag instead of a per-conversation one.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Table</th><th>Key columns</th><th>Purpose</th></tr>
+          <tr><td><code>users</code></td><td><code>username</code>, <code>email</code>, <code>hashed_password</code>, <code>last_seen</code></td><td>Reused from Project 5, plus <code>last_seen</code> for presence</td></tr>
+          <tr><td><code>password_reset_tokens</code></td><td><code>token</code>, <code>expires_at</code>, <code>used</code></td><td>In-app reset flow — no email service</td></tr>
+          <tr><td><code>conversations</code></td><td><code>is_group</code>, <code>name</code></td><td>The chat "room" itself, 1:1 or group</td></tr>
+          <tr><td><code>conversation_participants</code></td><td><code>conversation_id</code>, <code>user_id</code>, <code>deleted_at</code></td><td>Join table — membership, and per-user delete-for-me</td></tr>
+          <tr><td><code>messages</code></td><td><code>content</code>, <code>attachment_url</code>, <code>attachment_public_id</code></td><td>One row per message, optional Cloudinary attachment</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="flow">
+      <h2>Message + presence flow</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>Client opens a WebSocket per open chat</strong><span>wss://.../ws/conversations/5?token=&lt;jwt&gt; — token passed as a query param since the browser WebSocket API can't set headers</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Backend accepts first, then verifies</strong><span>await websocket.accept() always runs before the token check, so a rejected client gets a clean close code instead of a generic 1006 error</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Connection is registered in memory</strong><span>ConnectionManager keeps {conversation_id: [sockets]} as a plain dict — transient state, not written to Postgres</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>A message is sent</strong><span>Saved to the messages table first (the durable copy), then broadcast to every other open socket on that same conversation_id</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>Presence connects separately</strong><span>A second WebSocket (/ws/presence) tracks who's online; on connect/disconnect it broadcasts only to that user's "contacts" — other users sharing at least one conversation</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">6</span><div class="pipeline-body"><strong>Disconnect updates last_seen</strong><span>When a presence socket closes, the user's users.last_seen row is updated so "Last seen ..." can be shown even while offline</span></div></div>
+      </div>
+    </section>
+
+    <section id="concepts">
+      <h2>Key concepts</h2>
+      <div class="grid">
+        <div class="grid-card"><div class="icon">Real-time</div><h4>WebSockets</h4><p>One persistent, bidirectional connection instead of repeated request/response HTTP calls.</p></div>
+        <div class="grid-card"><div class="icon">Auth</div><h4>Query-param JWT</h4><p>Browser WebSockets can't send custom headers, so the token rides in the connection URL instead.</p></div>
+        <div class="grid-card"><div class="icon">Protocol</div><h4>Accept-before-close</h4><p>Always accept the handshake first, then reject with a real close code — avoids opaque 1006 errors.</p></div>
+        <div class="grid-card"><div class="icon">State</div><h4>In-memory connection managers</h4><p>Who's connected right now lives in server memory, not the database — correctly ephemeral.</p></div>
+        <div class="grid-card"><div class="icon">Schema</div><h4>Join-table conversations</h4><p>ConversationParticipant scales a "conversation" from 2 people to any group, with no schema change.</p></div>
+        <div class="grid-card"><div class="icon">Storage</div><h4>Cloudinary for attachments</h4><p>Files live on a third-party host, referenced by URL — never stored on the backend's own disk.</p></div>
+      </div>
+    </section>
+
+    <section id="sw">
+      <h2>Service worker: cache-first → network-first</h2>
+      <p>Project 5's service worker cached the app shell cache-first — fine for a to-do/notes app whose shell barely changes. This project exposed the real problem with that choice: a browser only re-checks a service worker for updates by comparing <code>sw.js</code> itself, byte-for-byte. If <code>sw.js</code>'s own content never changes, the old worker — and its caching strategy — keeps running forever, no matter how many times the rest of the app gets redeployed. Two separate bug reports this project ("group option missing," "new group not visible") both traced back to exactly this: users who already had the app open were being served stale, pre-feature JS.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Strategy</th><th>Behavior</th><th>Failure mode</th></tr>
+          <tr><td>Cache-first (Project 5)</td><td>Serve from cache immediately, never re-check network</td><td>Silently stale forever after any deploy that doesn't touch sw.js itself</td></tr>
+          <tr><td>Network-first (Project 6 fix)</td><td>Try the network first; cache successful responses; fall back to cache only if the fetch fails</td><td>None for staleness — small latency cost per request, acceptable for this app</td></tr>
+        </table>
+      </div>
+      <p>The alternative considered and deliberately not built was a full "update available" flow — detecting a waiting worker, showing a banner, and calling <code>skipWaiting()</code> + <code>postMessage()</code> on user confirmation. Network-first was chosen instead as the simpler fix that fully solves the actual problem (staleness) without that extra UI machinery, which wasn't judged necessary for this app's needs.</p>
+    </section>
+
+    <section id="bugs">
+      <h2>Bugs, debugged for real</h2>
+      <p>Every one of these was an actual failure hit mid-build, not a scripted lesson.</p>
+      <div class="bug">
+        <span class="label">device_bash mount-path mismatch</span>
+        <p>Writing directly to the absolute path <code>device_list_dir</code> reported failed with "No such file or directory" — <code>device_bash</code> needed the <code>$HOME/mnt/&lt;folder-name&gt;/...</code> mount prefix instead, a different path to the exact same files.</p>
+      </div>
+      <div class="bug">
+        <span class="label">PWA stuck on "Loading..." in dev mode</span>
+        <p>Same root cause as Project 5's dev-mode issue, hit again: the cache-first service worker conflicted with <code>next dev</code>'s hot-reload bundle hashes. Fixed by only registering the service worker in production builds, verified via <code>next build && next start</code>.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Group chat "not working" — a missing feature, not a bug</span>
+        <p>The backend fully supported group conversations from the start (<code>is_group</code>, a list of usernames, an optional name); the frontend's "start chat" form simply never had a way to create one. Fixed by adding a "+ New Group" toggle and form.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Recurring "can't see the feature" reports — stale service worker</span>
+        <p>Traced to the cache-first strategy described above: users with the app already open kept seeing pre-feature JS after successful deploys. Root-caused and fixed by switching to network-first, rather than relying on a manual unregister-and-hard-refresh workaround each time.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Transient Render /openapi.json 404</span>
+        <p>Swagger briefly reported "Failed to load API definition" right after a deploy. Render's logs showed a container-restart blip around the same time; resolved on a simple retry, no code change needed.</p>
+      </div>
+      <div class="bug">
+        <span class="label">CORS blocked the deployed frontend</span>
+        <p>Same class of bug as every prior deployed project: the backend's <code>allow_origins</code> needed the real Vercel production URL added. Separately confirmed that a per-deployment Vercel <em>preview</em> URL correctly fails CORS, since only the exact production origin is allowlisted.</p>
+      </div>
+    </section>
+
+    <section id="deploy">
+      <h2>Deployment</h2>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Piece</th><th>Host</th><th>Root Directory</th><th>Key setting</th></tr>
+          <tr><td>Backend</td><td>Render</td><td><code>project-6-chat-app/backend</code></td><td><code>uvicorn main:app --host 0.0.0.0 --port $PORT</code>, <code>DATABASE_URL</code> / <code>SECRET_KEY</code> / Cloudinary env vars</td></tr>
+          <tr><td>Frontend</td><td>Vercel</td><td><code>project-6-chat-app/frontend</code></td><td><code>NEXT_PUBLIC_API_URL</code> env var</td></tr>
+        </table>
+      </div>
+      <p>Verified live end-to-end with three real accounts across three different machines (Windows, two Macs): 1:1 messaging, presence, image/file upload, delete-for-me and delete-for-everyone, and — after the group-creation UI and service worker fixes shipped — group chat creation and live group messaging, all confirmed working in production.</p>
+    </section>
+
+    <section id="commands">
+      <h2>Commands reference</h2>
+      <pre><code># Backend — one-time setup
+python -m venv venv
+venv\Scripts\activate
+pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv bcrypt python-jose python-multipart "pydantic[email]" cloudinary websockets
+pip freeze &gt; requirements.txt   # only trust this AFTER confirming (venv) shows in the prompt
+
+# Backend — run locally
+uvicorn main:app --reload
+
+# Frontend — run locally
+npm run dev
+
+# Frontend — production build (required to actually test the service worker)
+npm run build
+npm start
+
+# Render start command (not the default!)
+uvicorn main:app --host 0.0.0.0 --port $PORT</code></pre>
+    </section>
+
+    <section id="timeline">
+      <h2>Build timeline</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>Scope agreed</strong><span>1:1 + group chat, JWT auth reused from Project 5, in-app password reset, presence, image/file sharing — typing indicators and read receipts explicitly deferred</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Backend: auth + password reset</strong><span>Reused Project 5's JWT/bcrypt setup, added the reset-token table and endpoints</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Backend: conversations, messaging, presence</strong><span>Conversation/ConversationParticipant/Message schema, WebSocket endpoints for live messages and presence, Cloudinary upload endpoint, delete-for-me/delete-for-everyone</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>Frontend: chat UI</strong><span>Conversation list, live message view, presence dots, file upload, delete-conversation menu</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>PWA packaging</strong><span>manifest.json, icons reused from Project 5, service worker with a production-only registration guard</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">6</span><div class="pipeline-body"><strong>Deployed</strong><span>Backend to Render, frontend to Vercel, CORS fixed, verified live across 3 accounts on 3 machines</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">7</span><div class="pipeline-body"><strong>Group chat UI added</strong><span>Diagnosed as a missing feature (not a bug) once real usage exposed it; added the "+ New Group" form</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">8</span><div class="pipeline-body"><strong>Service worker root-caused and fixed</strong><span>Traced two separate "feature missing" reports to one cause — cache-first staleness — and rewrote sw.js to network-first</span></div></div>
+      </div>
+    </section>
+
+    <footer class="page">Web &amp; App Dev Mentor Track · Project 6 of 10 · 2026-09-02</footer>
+  </main>
+</div>
+</body>
+</html>

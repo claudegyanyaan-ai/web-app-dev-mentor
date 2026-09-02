@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 6 Progress — Real-Time Chat App</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fafafa;
+    padding: 2rem;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #666; margin-bottom: 1.5rem; }
+  .status-badge {
+    display: inline-block;
+    background: #0d9488;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+  ul.checklist { list-style: none; }
+  ul.checklist li {
+    padding: 0.35rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  ul.checklist li::before {
+    content: "✓";
+    color: #0d9488;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+  .meta-item .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.03em; }
+  .meta-item .value { font-size: 1.1rem; font-weight: 600; margin-top: 0.15rem; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .live-link {
+    display: inline-block;
+    background: #1a1a1a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  .live-link:hover { background: #333; text-decoration: none; }
+  .concept-list { list-style: none; }
+  .concept-list li { padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
+  .concept-list li:last-child { border-bottom: none; }
+  .bug-note {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+  }
+  .bug-note + .bug-note { margin-top: 0.6rem; }
+  .arch-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0.75rem 0;
+  }
+  .arch-box {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    color: #0f766e;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+  }
+  .quiz-item { padding: 0.5rem 0; }
+  .quiz-item .q { font-size: 0.92rem; }
+  footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Project 6: Real-Time Chat App (1:1 + Group, PWA)</h1>
+  <p class="subtitle">Web &amp; App Dev Mentor Track — status tracker</p>
+  <span class="status-badge">✓ Complete &amp; Deployed</span>
+
+  <div class="card">
+    <h2>At a glance</h2>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="label">Started</div>
+        <div class="value">2026-09-01</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Completed</div>
+        <div class="value">2026-09-02</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Stack</div>
+        <div class="value">Next.js PWA / FastAPI + WebSockets / Postgres</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">New this project</div>
+        <div class="value">WebSockets, Cloudinary</div>
+      </div>
+    </div>
+    <div class="arch-row">
+      <span class="arch-box">Next.js PWA (Vercel)</span> → <span class="arch-box">FastAPI + JWT + WebSockets (Render)</span> → <span class="arch-box">Postgres (Neon)</span>
+    </div>
+    <a class="live-link" href="https://web-app-dev-mentor.vercel.app/" target="_blank">Visit Live App →</a>
+    <a class="live-link" href="https://project6-chat-backend.onrender.com/docs" target="_blank">Backend API Docs →</a>
+  </div>
+
+  <div class="card">
+    <h2>Build checklist</h2>
+    <ul class="checklist">
+      <li>JWT auth reused from Project 5, plus in-app password reset (token displayed directly, no email service)</li>
+      <li>Conversation / ConversationParticipant / Message schema supporting both 1:1 and group chats via one join-table design</li>
+      <li>1:1 conversation dedup (join + group_by + having) — group conversations deliberately skip dedup</li>
+      <li>Live messaging via WebSocket (/ws/conversations/{id}), JWT passed as a query param, accept-before-close pattern</li>
+      <li>Online/offline presence via a separate WebSocket (/ws/presence), scoped only to users who share a conversation ("contacts")</li>
+      <li>Image/file sharing via Cloudinary, with public_id tracked per message for later cleanup</li>
+      <li>Delete-for-me (per-user, non-destructive) and delete-for-everyone (real delete + Cloudinary attachment cleanup) as separate endpoints</li>
+      <li>Group chat creation UI: "+ New Group" form (name required, comma-separated usernames)</li>
+      <li>PWA packaging: manifest.json, service worker, production-only registration guard (dev-mode hot-reload lesson carried over from Project 5)</li>
+      <li>Deployed as two services — backend to Render, frontend to Vercel — CORS updated, tested live with 3 real accounts across machines</li>
+    </ul>
+    <div class="bug-note">
+      <strong>Missing feature, not a bug — group chat UI:</strong> the backend already fully
+      supported groups; the frontend simply never had a form to create one. Added a "+ New
+      Group" toggle with a group-name and comma-separated-usernames form.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — stale service worker after every deploy:</strong> the cache-first
+      service worker kept serving old cached JS to users who already had the app open, even
+      after successful deploys, because browsers only re-check a service worker by comparing
+      sw.js byte-for-byte. Root-caused and fixed by switching to network-first with cache
+      fallback.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — transient Render /openapi.json 404:</strong> Swagger briefly failed
+      to load its API definition right after a deploy; logs showed a container restart blip,
+      resolved on retry with no code change.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — CORS:</strong> same class of bug as every prior deployed project —
+      the real Vercel production URL had to be added to the backend's allow_origins list.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Concepts introduced</h2>
+    <p style="margin-bottom:0.75rem; color:#555;">Full plain-English explanations in <a href="CONCEPTS.md">CONCEPTS.md</a>. Summary:</p>
+    <ul class="concept-list">
+      <li>WebSockets — a persistent, bidirectional connection, vs. request/response HTTP</li>
+      <li>Authenticating a WebSocket via a query-param JWT (no custom headers available)</li>
+      <li>The accept-before-close pattern — avoids generic 1006 errors on rejected connections</li>
+      <li>In-memory connection managers for transient state (who's online right now), separate from the database</li>
+      <li>Conversation / ConversationParticipant / Message join-table design for 1:1 and group chats alike</li>
+      <li>1:1 dedup vs. deliberately allowing duplicate groups</li>
+      <li>Presence scoped to "contacts" (shared-conversation users), not broadcast globally</li>
+      <li>Cloudinary for file/image storage, with public_id tracked for later cleanup</li>
+      <li>Delete-for-me vs. delete-for-everyone as genuinely different operations</li>
+      <li>Cache-first vs. network-first service worker strategy, and why sw.js updates aren't auto-detected</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Checkpoint quiz</h2>
+    <div class="quiz-item"><div class="q">1. What does a WebSocket give you that a normal HTTP request can't, and why does live chat need it?</div></div>
+    <div class="quiz-item"><div class="q">2. Why is the chat's JWT passed as a query parameter instead of an Authorization header for the WebSocket connection?</div></div>
+    <div class="quiz-item"><div class="q">3. Why does the app use a Conversation + ConversationParticipant join table instead of just a user_a_id/user_b_id pair on each conversation?</div></div>
+    <div class="quiz-item"><div class="q">4. Why does 1:1 conversation dedup exist, but group conversations deliberately skip it?</div></div>
+    <div class="quiz-item"><div class="q">5. Why did the group chat feature "not work" even though the backend already fully supported it — and separately, why did users keep seeing stale content after later deploys?</div></div>
+    <p style="color:#888; font-size:0.9rem; margin-top:0.5rem;">Answered verbally in the mentoring session — see debrief.</p>
+  </div>
+
+  <div class="card">
+    <h2>What you could break/change next</h2>
+    <ul class="checklist">
+      <li>Add typing indicators and read receipts (both explicitly deferred from this project's scope)</li>
+      <li>Push a live "new conversation" event over WebSocket so a newly-created chat appears without a page refresh</li>
+      <li>Add a proper "update available" banner (postMessage + skipWaiting) instead of relying on network-first alone</li>
+      <li>Add group admin controls — remove a member, rename a group, leave a group</li>
+    </ul>
+  </div>
+
+  <footer>Web &amp; App Dev Mentor Track · Project 6 of 10 · Last updated 2026-09-02</footer>
+</div>
+</body>
+</html>
