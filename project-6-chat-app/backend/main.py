@@ -1,14 +1,14 @@
 import os
-import json
 import secrets
 from datetime import datetime, timedelta
 from typing import Dict, List
 
 import cloudinary
 import cloudinary.uploader
+
 from fastapi import (
-    FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query,
-    UploadFile, File, Form,
+    FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect,
+    Query, UploadFile, File, Form,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
@@ -16,13 +16,17 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
-from database import engine, Base, get_db
-import models, schemas
-from auth import hash_password, verify_password, create_access_token, get_current_user, SECRET_KEY, ALGORITHM
+from database import engine, SessionLocal, get_db, Base
+import models
+import schemas
+from auth import (
+    hash_password, verify_password, create_access_token,
+    get_current_user, SECRET_KEY, ALGORITHM,
+)
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Project 6 - Chat App API")
+app = FastAPI(title="Project 6 - Chat App")
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -32,34 +36,32 @@ cloudinary.config(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "null"],  # "null" = local file:// testing; remove once we deploy
+    allow_origins=["http://localhost:3000", "null"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-RESET_TOKEN_EXPIRE_MINUTES = 30
 
-
-# ---------- Auth ----------
+# ---------------- Auth ----------------
 
 @app.post("/signup", response_model=schemas.UserOut)
-def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def signup(payload: schemas.UserCreate, db: Session = Depends(get_db)):
     existing = db.query(models.User).filter(
-        (models.User.email == user.email) | (models.User.username == user.username)
+        (models.User.username == payload.username) | (models.User.email == payload.email)
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="Username or email already registered")
 
-    new_user = models.User(
-        username=user.username,
-        email=user.email,
-        hashed_password=hash_password(user.password),
+    user = models.User(
+        username=payload.username,
+        email=payload.email,
+        hashed_password=hash_password(payload.password),
     )
-    db.add(new_user)
+    db.add(user)
     db.commit()
-    db.refresh(new_user)
-    return new_user
+    db.refresh(user)
+    return user
 
 
 @app.post("/login", response_model=schemas.Token)
@@ -67,8 +69,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
-
-    access_token = create_access_token({"sub": str(user.id)})
+    access_token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -79,29 +80,32 @@ def forgot_password(payload: schemas.ForgotPasswordRequest, db: Session = Depend
         raise HTTPException(status_code=404, detail="No account with that email")
 
     token = secrets.token_urlsafe(32)
-    expires_at = datetime.utcnow() + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
-
-    db.add(models.PasswordResetToken(user_id=user.id, token=token, expires_at=expires_at))
+    reset_token = models.PasswordResetToken(
+        user_id=user.id,
+        token=token,
+        expires_at=datetime.utcnow() + timedelta(minutes=30),
+    )
+    db.add(reset_token)
     db.commit()
 
-    return {"reset_token": token, "expires_at": expires_at}
+    return {"reset_token": token, "message": "Use this token with /reset-password within 30 minutes"}
 
 
 @app.post("/reset-password")
 def reset_password(payload: schemas.ResetPasswordRequest, db: Session = Depends(get_db)):
-    reset_entry = db.query(models.PasswordResetToken).filter(
-        models.PasswordResetToken.token == payload.token
+    reset_token = db.query(models.PasswordResetToken).filter(
+        models.PasswordResetToken.token == payload.token,
+        models.PasswordResetToken.used == False,
     ).first()
-
-    if not reset_entry or reset_entry.used or reset_entry.expires_at < datetime.utcnow():
+    if not reset_token or reset_token.expires_at < datetime.utcnow():
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
 
-    user = db.query(models.User).filter(models.User.id == reset_entry.user_id).first()
+    user = db.query(models.User).filter(models.User.id == reset_token.user_id).first()
     user.hashed_password = hash_password(payload.new_password)
-    reset_entry.used = True
+    reset_token.used = True
     db.commit()
 
-    return {"message": "Password updated successfully"}
+    return {"message": "Password reset successful"}
 
 
 @app.get("/me", response_model=schemas.UserOut)
@@ -109,38 +113,35 @@ def read_current_user(current_user: models.User = Depends(get_current_user)):
     return current_user
 
 
-# ---------- Conversations & Messages ----------
+# ---------------- Conversation helpers ----------------
 
 def get_conversation_or_404(conversation_id: int, db: Session, current_user: models.User):
     conversation = db.query(models.Conversation).filter(models.Conversation.id == conversation_id).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
-
-    is_participant = db.query(models.ConversationParticipant).filter(
+    participant = db.query(models.ConversationParticipant).filter(
         models.ConversationParticipant.conversation_id == conversation_id,
         models.ConversationParticipant.user_id == current_user.id,
     ).first()
-    if not is_participant:
-        raise HTTPException(status_code=403, detail="You are not part of this conversation")
-
+    if not participant:
+        raise HTTPException(status_code=403, detail="Not a participant of this conversation")
     return conversation
 
 
-def serialize_conversation(conversation: models.Conversation, db: Session) -> schemas.ConversationOut:
-    participants = (
-        db.query(models.User)
-        .join(models.ConversationParticipant, models.ConversationParticipant.user_id == models.User.id)
-        .filter(models.ConversationParticipant.conversation_id == conversation.id)
-        .all()
-    )
-    return schemas.ConversationOut(
-        id=conversation.id,
-        is_group=conversation.is_group,
-        name=conversation.name,
-        created_at=conversation.created_at,
-        participants=[schemas.ParticipantOut(id=u.id, username=u.username) for u in participants],
-    )
+def serialize_conversation(conversation: models.Conversation, db: Session):
+    participants = db.query(models.ConversationParticipant).filter(
+        models.ConversationParticipant.conversation_id == conversation.id
+    ).all()
+    return {
+        "id": conversation.id,
+        "is_group": conversation.is_group,
+        "name": conversation.name,
+        "created_at": conversation.created_at,
+        "participants": [{"id": p.user.id, "username": p.user.username} for p in participants],
+    }
 
+
+# ---------------- Conversations ----------------
 
 @app.post("/conversations", response_model=schemas.ConversationOut)
 def create_conversation(
@@ -148,52 +149,110 @@ def create_conversation(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    other_users = db.query(models.User).filter(models.User.username.in_(payload.participant_usernames)).all()
-    found = {u.username for u in other_users}
-    missing = set(payload.participant_usernames) - found
-    if missing:
-        raise HTTPException(status_code=404, detail=f"Unknown usernames: {', '.join(missing)}")
+    usernames = set(payload.participant_usernames)
+    usernames.add(current_user.username)
 
-    if not payload.is_group and len(other_users) != 1:
-        raise HTTPException(status_code=400, detail="A 1:1 conversation needs exactly one other participant")
+    users = db.query(models.User).filter(models.User.username.in_(usernames)).all()
+    if len(users) != len(usernames):
+        raise HTTPException(status_code=404, detail="One or more usernames not found")
 
-    if not payload.is_group:
-        other_user_id = other_users[0].id
+    user_ids = [u.id for u in users]
+
+    if not payload.is_group and len(user_ids) == 2:
         existing = (
             db.query(models.Conversation)
-            .join(models.ConversationParticipant, models.ConversationParticipant.conversation_id == models.Conversation.id)
+            .join(models.ConversationParticipant)
             .filter(
                 models.Conversation.is_group == False,
-                models.ConversationParticipant.user_id.in_([current_user.id, other_user_id]),
+                models.ConversationParticipant.user_id.in_(user_ids),
             )
             .group_by(models.Conversation.id)
-            .having(func.count(models.ConversationParticipant.user_id.distinct()) == 2)
+            .having(func.count(func.distinct(models.ConversationParticipant.user_id)) == 2)
             .first()
         )
         if existing:
-            return serialize_conversation(existing, db)
+            existing_ids = {
+                p.user_id for p in db.query(models.ConversationParticipant).filter(
+                    models.ConversationParticipant.conversation_id == existing.id
+                ).all()
+            }
+            if existing_ids == set(user_ids):
+                return serialize_conversation(existing, db)
 
     conversation = models.Conversation(is_group=payload.is_group, name=payload.name)
     db.add(conversation)
-    db.flush()  # assigns conversation.id before we commit
-
-    for uid in {current_user.id} | {u.id for u in other_users}:
-        db.add(models.ConversationParticipant(conversation_id=conversation.id, user_id=uid))
-
     db.commit()
     db.refresh(conversation)
+
+    for uid in user_ids:
+        db.add(models.ConversationParticipant(conversation_id=conversation.id, user_id=uid))
+    db.commit()
+
     return serialize_conversation(conversation, db)
 
 
 @app.get("/conversations", response_model=list[schemas.ConversationOut])
 def list_conversations(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    conversation_ids = [
-        cp.conversation_id
-        for cp in db.query(models.ConversationParticipant).filter(models.ConversationParticipant.user_id == current_user.id).all()
-    ]
-    conversations = db.query(models.Conversation).filter(models.Conversation.id.in_(conversation_ids)).all()
+    my_participations = db.query(models.ConversationParticipant).filter(
+        models.ConversationParticipant.user_id == current_user.id
+    ).all()
+    visible_ids = []
+    for cp in my_participations:
+        if cp.deleted_at is None:
+            visible_ids.append(cp.conversation_id)
+        else:
+            has_newer_message = db.query(models.Message).filter(
+                models.Message.conversation_id == cp.conversation_id,
+                models.Message.created_at > cp.deleted_at,
+            ).first()
+            if has_newer_message:
+                visible_ids.append(cp.conversation_id)
+    conversations = db.query(models.Conversation).filter(models.Conversation.id.in_(visible_ids)).all()
     return [serialize_conversation(c, db) for c in conversations]
 
+
+@app.delete("/conversations/{conversation_id}/me")
+def delete_conversation_for_me(
+    conversation_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    participant = db.query(models.ConversationParticipant).filter(
+        models.ConversationParticipant.conversation_id == conversation_id,
+        models.ConversationParticipant.user_id == current_user.id,
+    ).first()
+    if not participant:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    participant.deleted_at = datetime.utcnow()
+    db.commit()
+    return {"message": "Conversation deleted for you"}
+
+
+@app.delete("/conversations/{conversation_id}")
+def delete_conversation_for_everyone(
+    conversation_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    conversation = get_conversation_or_404(conversation_id, db, current_user)
+    attachments = db.query(models.Message).filter(
+        models.Message.conversation_id == conversation_id,
+        models.Message.attachment_public_id.isnot(None),
+    ).all()
+    for msg in attachments:
+        try:
+            cloudinary.uploader.destroy(
+                msg.attachment_public_id,
+                resource_type="image" if msg.attachment_type == "image" else "raw",
+            )
+        except Exception:
+            pass
+    db.delete(conversation)
+    db.commit()
+    return {"message": "Conversation deleted for everyone"}
+
+
+# ---------------- Messages (REST) ----------------
 
 @app.post("/conversations/{conversation_id}/messages", response_model=schemas.MessageOut)
 def send_message(
@@ -203,17 +262,26 @@ def send_message(
     current_user: models.User = Depends(get_current_user),
 ):
     get_conversation_or_404(conversation_id, db, current_user)
-
-    message = models.Message(conversation_id=conversation_id, sender_id=current_user.id, content=payload.content)
+    message = models.Message(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        content=payload.content,
+        attachment_url=None,
+        attachment_type=None,
+    )
     db.add(message)
     db.commit()
     db.refresh(message)
-
-    return schemas.MessageOut(
-        id=message.id, conversation_id=message.conversation_id, sender_id=message.sender_id,
-        sender_username=current_user.username, content=message.content,
-        attachment_url=None, attachment_type=None, created_at=message.created_at,
-    )
+    return {
+        "id": message.id,
+        "conversation_id": message.conversation_id,
+        "sender_id": message.sender_id,
+        "sender_username": current_user.username,
+        "content": message.content,
+        "attachment_url": None,
+        "attachment_type": None,
+        "created_at": message.created_at,
+    }
 
 
 @app.get("/conversations/{conversation_id}/messages", response_model=list[schemas.MessageOut])
@@ -223,22 +291,24 @@ def list_messages(
     current_user: models.User = Depends(get_current_user),
 ):
     get_conversation_or_404(conversation_id, db, current_user)
-
-    rows = (
-        db.query(models.Message, models.User.username)
-        .join(models.User, models.Message.sender_id == models.User.id)
+    messages = (
+        db.query(models.Message)
         .filter(models.Message.conversation_id == conversation_id)
         .order_by(models.Message.created_at.asc())
         .all()
     )
     return [
-        schemas.MessageOut(
-            id=m.id, conversation_id=m.conversation_id, sender_id=m.sender_id,
-            sender_username=uname, content=m.content,
-            attachment_url=m.attachment_url, attachment_type=m.attachment_type,
-            created_at=m.created_at,
-        )
-        for m, uname in rows
+        {
+            "id": m.id,
+            "conversation_id": m.conversation_id,
+            "sender_id": m.sender_id,
+            "sender_username": m.sender.username,
+            "content": m.content,
+            "attachment_url": m.attachment_url,
+            "attachment_type": m.attachment_type,
+            "created_at": m.created_at,
+        }
+        for m in messages
     ]
 
 
@@ -251,55 +321,48 @@ async def upload_message_attachment(
     current_user: models.User = Depends(get_current_user),
 ):
     get_conversation_or_404(conversation_id, db, current_user)
-
     is_image = (file.content_type or "").startswith("image/")
     upload_result = cloudinary.uploader.upload(
         file.file,
         resource_type="image" if is_image else "raw",
         folder=f"project6-chat/conversation_{conversation_id}",
     )
-
     message = models.Message(
         conversation_id=conversation_id,
         sender_id=current_user.id,
         content=caption,
         attachment_url=upload_result["secure_url"],
         attachment_type="image" if is_image else "file",
+        attachment_public_id=upload_result["public_id"],
     )
     db.add(message)
     db.commit()
     db.refresh(message)
-
     out_dict = {
-        "id": message.id,
-        "conversation_id": message.conversation_id,
-        "sender_id": message.sender_id,
-        "sender_username": current_user.username,
-        "content": message.content,
-        "attachment_url": message.attachment_url,
-        "attachment_type": message.attachment_type,
+        "id": message.id, "conversation_id": message.conversation_id, "sender_id": message.sender_id,
+        "sender_username": current_user.username, "content": message.content,
+        "attachment_url": message.attachment_url, "attachment_type": message.attachment_type,
         "created_at": message.created_at.isoformat(),
     }
     await manager.broadcast(conversation_id, out_dict)
-
     return schemas.MessageOut(**out_dict)
 
 
-# ---------- WebSocket: live messaging ----------
+# ---------------- WebSocket: live messaging ----------------
 
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[int, List[WebSocket]] = {}
 
-    def connect(self, conversation_id: int, websocket: WebSocket):
+    async def connect(self, conversation_id: int, websocket: WebSocket):
         self.active_connections.setdefault(conversation_id, []).append(websocket)
 
     def disconnect(self, conversation_id: int, websocket: WebSocket):
-        connections = self.active_connections.get(conversation_id, [])
-        if websocket in connections:
-            connections.remove(websocket)
-        if not connections:
-            self.active_connections.pop(conversation_id, None)
+        if conversation_id in self.active_connections:
+            if websocket in self.active_connections[conversation_id]:
+                self.active_connections[conversation_id].remove(websocket)
+            if not self.active_connections[conversation_id]:
+                del self.active_connections[conversation_id]
 
     async def broadcast(self, conversation_id: int, message: dict):
         for connection in self.active_connections.get(conversation_id, []):
@@ -321,121 +384,119 @@ def get_user_from_token(token: str, db: Session):
 
 
 @app.websocket("/ws/conversations/{conversation_id}")
-async def websocket_endpoint(
-    websocket: WebSocket,
-    conversation_id: int,
-    token: str = Query(...),
-    db: Session = Depends(get_db),
-):
-    await websocket.accept()  # accept FIRST, so any close() after this carries a real reason code
-
-    user = get_user_from_token(token, db)
-    if not user:
-        await websocket.close(code=4001)  # invalid/missing token
-        return
-
-    is_participant = db.query(models.ConversationParticipant).filter(
-        models.ConversationParticipant.conversation_id == conversation_id,
-        models.ConversationParticipant.user_id == user.id,
-    ).first()
-    if not is_participant:
-        await websocket.close(code=4003)  # not a member of this conversation
-        return
-
-    manager.connect(conversation_id, websocket)
+async def websocket_endpoint(websocket: WebSocket, conversation_id: int, token: str = Query(...)):
+    await websocket.accept()
+    db = SessionLocal()
     try:
-        while True:
-            data = await websocket.receive_text()
-            payload = json.loads(data)
-            content = (payload.get("content") or "").strip()
-            if not content:
-                continue
+        user = get_user_from_token(token, db)
+        if not user:
+            await websocket.close(code=4001)
+            return
 
-            message = models.Message(conversation_id=conversation_id, sender_id=user.id, content=content)
-            db.add(message)
-            db.commit()
-            db.refresh(message)
+        participant = db.query(models.ConversationParticipant).filter(
+            models.ConversationParticipant.conversation_id == conversation_id,
+            models.ConversationParticipant.user_id == user.id,
+        ).first()
+        if not participant:
+            await websocket.close(code=4003)
+            return
 
-            out = {
-                "id": message.id,
-                "conversation_id": message.conversation_id,
-                "sender_id": message.sender_id,
-                "sender_username": user.username,
-                "content": message.content,
-                "attachment_url": None,
-                "attachment_type": None,
-                "created_at": message.created_at.isoformat(),
-            }
-            await manager.broadcast(conversation_id, out)
-    except WebSocketDisconnect:
-        manager.disconnect(conversation_id, websocket)
+        await manager.connect(conversation_id, websocket)
+
+        try:
+            while True:
+                data = await websocket.receive_json()
+                content = data.get("content", "")
+
+                message = models.Message(
+                    conversation_id=conversation_id,
+                    sender_id=user.id,
+                    content=content,
+                )
+                db.add(message)
+                db.commit()
+                db.refresh(message)
+
+                out = {
+                    "id": message.id,
+                    "conversation_id": conversation_id,
+                    "sender_id": user.id,
+                    "sender_username": user.username,
+                    "content": message.content,
+                    "attachment_url": None,
+                    "attachment_type": None,
+                    "created_at": message.created_at.isoformat(),
+                }
+                await manager.broadcast(conversation_id, out)
+        except WebSocketDisconnect:
+            manager.disconnect(conversation_id, websocket)
+    finally:
+        db.close()
 
 
-# ---------- WebSocket: presence ----------
+# ---------------- WebSocket: presence ----------------
 
 class PresenceManager:
     def __init__(self):
-        self.online_users: Dict[int, List[WebSocket]] = {}
+        self.active_users: Dict[int, WebSocket] = {}
 
-    def add(self, user_id: int, websocket: WebSocket):
-        self.online_users.setdefault(user_id, []).append(websocket)
+    async def connect(self, user_id: int, websocket: WebSocket):
+        self.active_users[user_id] = websocket
 
-    def remove(self, user_id: int, websocket: WebSocket):
-        connections = self.online_users.get(user_id, [])
-        if websocket in connections:
-            connections.remove(websocket)
-        if not connections:
-            self.online_users.pop(user_id, None)
+    def disconnect(self, user_id: int):
+        if user_id in self.active_users:
+            del self.active_users[user_id]
 
-    def is_online(self, user_id: int) -> bool:
-        return bool(self.online_users.get(user_id))
-
-    async def broadcast_to_contacts(self, db: Session, user_id: int, event: dict):
-        contact_conversation_ids = db.query(models.ConversationParticipant.conversation_id).filter(
+    def get_contacts(self, user_id: int, db: Session) -> List[int]:
+        conversation_ids = db.query(models.ConversationParticipant.conversation_id).filter(
             models.ConversationParticipant.user_id == user_id
-        )
-        contact_ids = {
-            cp.user_id
-            for cp in db.query(models.ConversationParticipant).filter(
-                models.ConversationParticipant.conversation_id.in_(contact_conversation_ids)
-            ).all()
-            if cp.user_id != user_id
+        ).subquery()
+        contact_ids = db.query(models.ConversationParticipant.user_id).filter(
+            models.ConversationParticipant.conversation_id.in_(conversation_ids),
+            models.ConversationParticipant.user_id != user_id,
+        ).distinct().all()
+        return [c[0] for c in contact_ids]
+
+    async def broadcast_status(self, user_id: int, status: str, db: Session, last_seen=None):
+        contacts = self.get_contacts(user_id, db)
+        payload = {
+            "type": "presence",
+            "user_id": user_id,
+            "status": status,
+            "last_seen": last_seen.isoformat() if last_seen else None,
         }
-        for contact_id in contact_ids:
-            for connection in self.online_users.get(contact_id, []):
-                await connection.send_json(event)
+        for contact_id in contacts:
+            ws = self.active_users.get(contact_id)
+            if ws:
+                await ws.send_json(payload)
 
 
 presence_manager = PresenceManager()
 
 
 @app.websocket("/ws/presence")
-async def presence_endpoint(websocket: WebSocket, token: str = Query(...), db: Session = Depends(get_db)):
+async def presence_endpoint(websocket: WebSocket, token: str = Query(...)):
     await websocket.accept()
-
-    user = get_user_from_token(token, db)
-    if not user:
-        await websocket.close(code=4001)
-        return
-
-    presence_manager.add(user.id, websocket)
-    await presence_manager.broadcast_to_contacts(
-        db, user.id, {"type": "presence", "user_id": user.id, "username": user.username, "online": True}
-    )
-
+    db = SessionLocal()
     try:
-        while True:
-            await websocket.receive_text()  # this socket only pushes events out; ignore anything sent in
-    except WebSocketDisconnect:
-        presence_manager.remove(user.id, websocket)
-        if not presence_manager.is_online(user.id):
+        user = get_user_from_token(token, db)
+        if not user:
+            await websocket.close(code=4001)
+            return
+
+        await presence_manager.connect(user.id, websocket)
+        await presence_manager.broadcast_status(user.id, "online", db)
+
+        try:
+            while True:
+                await websocket.receive_text()
+        except WebSocketDisconnect:
+            presence_manager.disconnect(user.id)
             user.last_seen = datetime.utcnow()
             db.commit()
-            await presence_manager.broadcast_to_contacts(
-                db, user.id,
-                {"type": "presence", "user_id": user.id, "username": user.username,
-                 "online": False, "last_seen": user.last_seen.isoformat()},
-            )
+            await presence_manager.broadcast_status(user.id, "offline", db, last_seen=user.last_seen)
+    finally:
+        db.close()
 
 
 @app.get("/conversations/{conversation_id}/presence")
@@ -445,19 +506,17 @@ def get_conversation_presence(
     current_user: models.User = Depends(get_current_user),
 ):
     get_conversation_or_404(conversation_id, db, current_user)
-
-    participants = (
-        db.query(models.User)
-        .join(models.ConversationParticipant, models.ConversationParticipant.user_id == models.User.id)
-        .filter(models.ConversationParticipant.conversation_id == conversation_id)
-        .all()
-    )
-    return [
-        {
-            "id": u.id,
-            "username": u.username,
-            "online": presence_manager.is_online(u.id),
-            "last_seen": u.last_seen.isoformat() if u.last_seen else None,
-        }
-        for u in participants
-    ]
+    participants = db.query(models.ConversationParticipant).filter(
+        models.ConversationParticipant.conversation_id == conversation_id,
+    ).all()
+    result = []
+    for p in participants:
+        if p.user_id == current_user.id:
+            continue
+        result.append({
+            "user_id": p.user_id,
+            "username": p.user.username,
+            "online": p.user_id in presence_manager.active_users,
+            "last_seen": p.user.last_seen.isoformat() if p.user.last_seen else None,
+        })
+    return result
