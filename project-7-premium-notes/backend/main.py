@@ -25,6 +25,7 @@ app.add_middleware(
         "http://localhost:3000",
         "https://web-app-dev-mentor-p5.vercel.app",
         "https://web-app-dev-mentor-p5-70a95v4i7-gyanyaan.vercel.app",
+        "https://web-app-dev-mentor-uwgt.vercel.app",
     ],
     allow_methods=["*"],
     allow_headers=["*"],
