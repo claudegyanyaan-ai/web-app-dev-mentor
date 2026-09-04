@@ -78,5 +78,4 @@ class NoteOut(BaseModel):
 # ---- Billing ----
 
 class SubscriptionCreateOut(BaseModel):
-    subscription_id: str
-    razorpay_key_id: str
+    subscription_session_id: str

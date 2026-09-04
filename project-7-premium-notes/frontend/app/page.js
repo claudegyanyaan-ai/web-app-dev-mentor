@@ -35,6 +35,9 @@ export default function Home() {
       router.push("/login");
       return;
     }
+    if (window.location.search.includes("upgraded=true")) {
+      window.history.replaceState({}, "", "/");
+    }
     loadAll();
   }, []);
 
@@ -85,18 +88,15 @@ async function loadAll() {
 
   async function handleUpgrade() {
     try {
-      const { subscription_id, razorpay_key_id } = await createSubscription();
-      const rzp = new window.Razorpay({
-        key: razorpay_key_id,
-        subscription_id: subscription_id,
-        name: "Premium Notes",
-        description: "Premium Monthly Subscription",
-        theme: { color: "#0d9488" },
-        handler: function () {
-          loadAll();
-        },
+      const { subscription_session_id } = await createSubscription();
+      const cashfree = window.Cashfree({ mode: "sandbox" });
+      const result = await cashfree.subscriptionsCheckout({
+        subsSessionId: subscription_session_id,
+        redirectTarget: "_self",
       });
-      rzp.open();
+      if (result && result.error) {
+        alert(result.error.message || "Could not start upgrade");
+      }
     } catch (err) {
       alert(err.message || "Could not start upgrade");
     }

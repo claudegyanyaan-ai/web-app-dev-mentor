@@ -10,14 +10,25 @@ import schemas
 import auth
 from fastapi import FastAPI, Depends, HTTPException, Request
 import os
+import time
 import hmac
 import hashlib
-import razorpay
+import base64
+import requests
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-razorpay_client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
+CASHFREE_API_BASE = os.getenv("CASHFREE_API_BASE", "https://sandbox.cashfree.com/pg")
+CASHFREE_API_VERSION = "2025-01-01"
+
+def cashfree_headers():
+    return {
+        "x-api-version": CASHFREE_API_VERSION,
+        "x-client-id": os.getenv("CASHFREE_CLIENT_ID"),
+        "x-client-secret": os.getenv("CASHFREE_CLIENT_SECRET"),
+        "Content-Type": "application/json",
+    }
 
 app.add_middleware(
     CORSMiddleware,
@@ -177,44 +188,63 @@ def create_subscription(db: Session = Depends(get_db), current_user: models.User
     if current_user.plan == "premium":
         raise HTTPException(status_code=400, detail="Already on Premium plan.")
 
-    subscription = razorpay_client.subscription.create({
-        "plan_id": os.getenv("RAZORPAY_PLAN_ID"),
-        "customer_notify": 1,
-        "total_count": 120,  # bills monthly for up to 10 years — Razorpay requires a cap, this approximates "indefinite"
-        "notes": {"user_id": str(current_user.id)},
-    })
+    subscription_id = f"sub_{current_user.id}_{int(time.time())}"
 
-    current_user.razorpay_subscription_id = subscription["id"]
-    current_user.subscription_status = subscription["status"]
+    payload = {
+        "subscription_id": subscription_id,
+        "customer_details": {
+            "customer_name": current_user.email.split("@")[0],
+            "customer_email": current_user.email,
+            "customer_phone": "9999999999",
+        },
+        "plan_details": {
+            "plan_id": os.getenv("CASHFREE_PLAN_ID"),
+        },
+        "subscription_meta": {
+            "return_url": os.getenv("CASHFREE_RETURN_URL", "http://localhost:3000/?upgraded=true"),
+        },
+    }
+
+    resp = requests.post(f"{CASHFREE_API_BASE}/subscriptions", json=payload, headers=cashfree_headers())
+    if resp.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Cashfree error: {resp.text}")
+    data = resp.json()
+
+    current_user.razorpay_subscription_id = subscription_id  # reused column — now stores the Cashfree subscription_id
+    current_user.subscription_status = data.get("subscription_status")
     db.commit()
 
-    return {"subscription_id": subscription["id"], "razorpay_key_id": os.getenv("RAZORPAY_KEY_ID")}
+    return {"subscription_session_id": data.get("subscription_session_id")}
 
 
 @app.post("/billing/webhook")
-async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
+async def cashfree_webhook(request: Request, db: Session = Depends(get_db)):
     body = await request.body()
-    signature = request.headers.get("X-Razorpay-Signature", "")
-    webhook_secret = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
+    timestamp = request.headers.get("x-webhook-timestamp", "")
+    signature = request.headers.get("x-webhook-signature", "")
+    client_secret = os.getenv("CASHFREE_CLIENT_SECRET", "")
 
-    expected_signature = hmac.new(webhook_secret.encode(), body, hashlib.sha256).hexdigest()
+    signed_payload = (timestamp + body.decode("utf-8")).encode()
+    expected_signature = base64.b64encode(
+        hmac.new(client_secret.encode(), signed_payload, hashlib.sha256).digest()
+    ).decode()
+
     if not hmac.compare_digest(expected_signature, signature):
         raise HTTPException(status_code=400, detail="Invalid webhook signature")
 
     payload = await request.json()
-    event = payload.get("event")
-    subscription_entity = payload.get("payload", {}).get("subscription", {}).get("entity", {})
-    subscription_id = subscription_entity.get("id")
+    event_type = (payload.get("type") or "").upper()
+    subscription_data = payload.get("data", {}).get("subscription", {})
+    subscription_id = subscription_data.get("subscription_id")
 
     if subscription_id:
         user = db.query(models.User).filter(models.User.razorpay_subscription_id == subscription_id).first()
         if user:
-            if event in ("subscription.activated", "subscription.charged"):
+            if "SUCCESS" in event_type or "AUTH" in event_type:
                 user.plan = "premium"
-                user.subscription_status = "active"
-            elif event in ("subscription.cancelled", "subscription.halted", "subscription.completed"):
+            elif "FAILED" in event_type or "CANCEL" in event_type:
                 user.plan = "free"
-                user.subscription_status = event.split(".")[1]
+            user.subscription_status = subscription_data.get("subscription_status", event_type)
             db.commit()
 
     return {"status": "ok"}

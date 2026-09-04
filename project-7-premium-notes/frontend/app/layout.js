@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
         {children}
         <RegisterSW />
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+        <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="afterInteractive" />
       </body>
     </html>
   );
