@@ -234,17 +234,22 @@ async def cashfree_webhook(request: Request, db: Session = Depends(get_db)):
 
     payload = await request.json()
     event_type = (payload.get("type") or "").upper()
-    subscription_data = payload.get("data", {}).get("subscription", {})
-    subscription_id = subscription_data.get("subscription_id")
+    data = payload.get("data", {})
+    # Cashfree nests the real subscription fields under "subscription_details";
+    # a few event types (e.g. SUBSCRIPTION_AUTH_STATUS) also duplicate
+    # subscription_id one level up, so check both.
+    subscription_details = data.get("subscription_details", {})
+    subscription_id = subscription_details.get("subscription_id") or data.get("subscription_id")
+    subscription_status = (subscription_details.get("subscription_status") or data.get("subscription_status") or "").upper()
 
     if subscription_id:
         user = db.query(models.User).filter(models.User.razorpay_subscription_id == subscription_id).first()
         if user:
-            if "SUCCESS" in event_type or "AUTH" in event_type:
+            if subscription_status == "ACTIVE":
                 user.plan = "premium"
-            elif "FAILED" in event_type or "CANCEL" in event_type:
+            elif subscription_status in ("CANCELLED", "AUTH_FAILED", "ON_HOLD", "COMPLETED", "EXPIRED"):
                 user.plan = "free"
-            user.subscription_status = subscription_data.get("subscription_status", event_type)
+            user.subscription_status = subscription_status or event_type
             db.commit()
 
     return {"status": "ok"}
