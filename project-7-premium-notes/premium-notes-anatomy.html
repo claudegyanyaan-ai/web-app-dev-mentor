@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Notes Anatomy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --surface-2: #f2f0ea;
+    --border: #ddd8ce;
+    --text: #241f1a;
+    --text-dim: #6b6357;
+    --accent: #0d9488;
+    --accent-soft: #e6f6f4;
+    --accent-text: #0f766e;
+    --warn: #a35a1e;
+    --warn-soft: #fbeee0;
+    --code-bg: #241f1a;
+    --code-text: #f2ede2;
+    --shadow: 0 1px 2px rgba(36,31,26,0.06), 0 8px 24px rgba(36,31,26,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f;
+      --surface: #211d17;
+      --surface-2: #2a251d;
+      --border: #3a3327;
+      --text: #ede7db;
+      --text-dim: #b3a894;
+      --accent: #5fc9c0;
+      --accent-soft: #1e3634;
+      --accent-text: #8fe0d8;
+      --warn: #e0a25c;
+      --warn-soft: #3a2c18;
+      --code-bg: #0f0d0a;
+      --code-text: #ede7db;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f;
+    --surface: #211d17;
+    --surface-2: #2a251d;
+    --border: #3a3327;
+    --text: #ede7db;
+    --text-dim: #b3a894;
+    --accent: #5fc9c0;
+    --accent-soft: #1e3634;
+    --accent-text: #8fe0d8;
+    --warn: #e0a25c;
+    --warn-soft: #3a2c18;
+    --code-bg: #0f0d0a;
+    --code-text: #ede7db;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-text); }
+
+  .shell { display: flex; max-width: 1180px; margin: 0 auto; }
+
+  nav.toc {
+    width: 240px;
+    flex-shrink: 0;
+    padding: 3rem 1.5rem 3rem 2rem;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav.toc .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; margin-bottom: 0.65rem; }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    display: flex;
+    gap: 0.55rem;
+  }
+  nav.toc a:hover { color: var(--accent-text); }
+  nav.toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  main { flex: 1; min-width: 0; padding: 3.5rem 2.5rem 6rem; }
+
+  header.hero { margin-bottom: 3rem; }
+  .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 3px;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    line-height: 1.12;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .dek {
+    font-size: 1.08rem;
+    color: var(--text-dim);
+    max-width: 62ch;
+    line-height: 1.55;
+  }
+  .stackline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+  .stackline .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.32rem 0.7rem;
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+  }
+  .stackline .arrow { color: var(--text-dim); }
+
+  section { margin-bottom: 3.25rem; scroll-margin-top: 2rem; }
+  h2 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 1.5rem 0 0.6rem;
+  }
+  p { line-height: 1.7; max-width: 68ch; }
+  p + p { margin-top: 0.9rem; }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 1.1rem 1.3rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    box-shadow: var(--shadow);
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2rem 1.5rem;
+    box-shadow: var(--shadow);
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .arch-row { display: flex; align-items: stretch; gap: 0; min-width: 720px; }
+  .arch-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem 1.2rem;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent-soft);
+  }
+  .arch-node .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .arch-node .name { font-weight: 700; font-size: 1rem; }
+  .arch-node .host { font-size: 0.8rem; color: var(--text-dim); }
+  .arch-connector {
+    flex-shrink: 0;
+    width: 92px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .arch-connector .glyph { font-size: 1.3rem; color: var(--accent); }
+
+  .pipeline { display: flex; flex-direction: column; gap: 0; margin: 1.5rem 0; }
+  .pipeline-step {
+    display: flex;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pipeline-step:last-child { border-bottom: none; }
+  .pipeline-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+  }
+  .pipeline-body strong { display: block; margin-bottom: 0.2rem; }
+  .pipeline-body span { font-size: 0.9rem; color: var(--text-dim); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .grid-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .grid-card .icon { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .grid-card h4 { margin: 0 0 0.35rem; font-size: 0.98rem; font-family: 'IBM Plex Sans', sans-serif; }
+  .grid-card p { font-size: 0.87rem; margin: 0; color: var(--text-dim); max-width: none; }
+
+  .bug {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    border-radius: 8px;
+    padding: 1.1rem 1.3rem;
+    margin: 1rem 0;
+  }
+  .bug .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--warn);
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  .bug p { margin: 0; max-width: none; font-size: 0.92rem; }
+
+  .tablewrap { overflow-x: auto; margin: 1.5rem 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--border); }
+  th { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.82em; }
+
+  footer.page {
+    max-width: 68ch;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 860px) {
+    nav.toc { display: none; }
+    main { padding: 2rem 1.25rem 4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="toc">
+    <div class="eyebrow">Project 7 · Contents</div>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#gateway-switch">Why the payment gateway was swapped</a></li>
+      <li><a href="#schema">Data model</a></li>
+      <li><a href="#flow">Subscription flow</a></li>
+      <li><a href="#concepts">Key concepts</a></li>
+      <li><a href="#bugs">Bugs, debugged for real</a></li>
+      <li><a href="#deploy">Deployment</a></li>
+      <li><a href="#commands">Commands reference</a></li>
+      <li><a href="#timeline">Build timeline</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <span class="kicker">Project 7 of 10 · Anatomy</span>
+      <h1>Premium Notes (Subscription Billing)</h1>
+      <p class="dek">Project 5's auth-enabled Tasks &amp; Notes PWA, extended with a Todoist-style freemium model — a 5-item free cap and a ₹149/month Premium plan — backed by real recurring-payment subscription billing. Built first against Razorpay, then rebuilt against Cashfree after conclusively proving Razorpay's sandbox itself was broken, not this project's code.</p>
+      <div class="stackline">
+        <span class="pill">Next.js PWA</span><span class="arrow">→</span>
+        <span class="pill">FastAPI + JWT</span><span class="arrow">→</span>
+        <span class="pill">Postgres</span>
+        <span class="arrow" style="margin-left:0.5rem;">·</span>
+        <span class="pill">Vercel</span><span class="arrow">+</span><span class="pill">Render</span><span class="arrow">+</span><span class="pill">Neon</span><span class="arrow">+</span><span class="pill">Cashfree</span>
+      </div>
+    </header>
+
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Project 7's job was to add real billing to an existing app rather than build billing as its own toy demo — the free/paid split had to actually gate a feature (item count) that the rest of the app already had, and the payment had to be a genuine recurring subscription with a webhook-driven upgrade, not a one-off "mark as paid" button.</p>
+      <p>Scope: fork Project 5's Tasks &amp; Notes PWA, cap the free plan at 5 items total (tasks + notes combined), and add a ₹149/month Premium subscription that lifts the cap once payment is authorized. What wasn't in scope going in — but became the actual story of this project — was discovering mid-build that the first payment gateway chosen was itself broken in its own sandbox, and having to swap gateways without losing any of the freemium logic already built.</p>
+    </section>
+
+    <section id="architecture">
+      <h2>Architecture</h2>
+      <div class="arch-diagram">
+        <div class="arch-row">
+          <div class="arch-node">
+            <span class="tag">Tier 1 — PWA client</span>
+            <span class="name">Next.js frontend</span>
+            <span class="host">Vercel</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">⇄</span>REST +<br>Bearer token</div>
+          <div class="arch-node">
+            <span class="tag">Tier 2 — API + billing logic</span>
+            <span class="name">FastAPI + JWT</span>
+            <span class="host">Render</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">→</span>SQLAlchemy<br>ORM</div>
+          <div class="arch-node">
+            <span class="tag">Tier 3 — durable data</span>
+            <span class="name">Postgres (users, tasks, notes)</span>
+            <span class="host">Neon</span>
+          </div>
+        </div>
+      </div>
+      <p>A fourth party sits alongside the usual three tiers: Cashfree. The frontend talks to it directly for hosted checkout (via its JS SDK), the backend talks to it directly to create subscriptions (REST API), and Cashfree talks back to the backend on its own initiative via webhook whenever a subscription's status changes — the one part of this architecture where an external service pushes data in, rather than the app pulling it.</p>
+    </section>
+
+    <section id="gateway-switch">
+      <h2>Why the payment gateway was swapped</h2>
+      <p>The project started on Razorpay. Its sandbox checkout consistently failed with a generic "We are facing some trouble completing your request" error — reproduced identically on a completely fresh Razorpay test account, a fresh plan, and fresh API keys, triggered straight from Razorpay's own dashboard checkout UI rather than this project's code. That reproduction is what turned "a bug to fix" into "a platform issue to work around": if a brand-new account with nothing this project touched still fails the exact same way, the problem isn't here.</p>
+      <p>Stripe was considered as an alternative next, but Stripe's own support docs confirm new India-based account signups are invite-only and blocked entirely — ruled out immediately for this project's location. Cashfree was chosen instead, and — critically — proved out manually through its own dashboard (a full eNACH mandate authorization, using a built-in "Simulate Success" sandbox simulator) before a single line of this project's code was touched, so the gateway choice itself was validated independently of the migration.</p>
+    </section>
+
+    <section id="schema">
+      <h2>Data model</h2>
+      <p>Two columns on the existing <code>users</code> table (both already present from the original Razorpay integration) carry billing state — deliberately kept and repurposed rather than renamed when the gateway changed.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Table</th><th>Key columns</th><th>Purpose</th></tr>
+          <tr><td><code>users</code></td><td><code>plan</code></td><td><code>"free"</code> or <code>"premium"</code> — the actual gate <code>check_item_limit()</code> reads</td></tr>
+          <tr><td><code>users</code></td><td><code>razorpay_subscription_id</code></td><td>Despite the name, now stores Cashfree's <code>subscription_id</code> — reused rather than migrated to a new column</td></tr>
+          <tr><td><code>users</code></td><td><code>subscription_status</code></td><td>Raw status string from the most recent webhook event (e.g. <code>ACTIVE</code>, <code>BANK_APPROVAL_PENDING</code>)</td></tr>
+          <tr><td><code>tasks</code> / <code>notes</code></td><td><code>user_id</code></td><td>Unchanged from Project 5 — what <code>check_item_limit()</code> counts against the cap</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="flow">
+      <h2>Subscription flow</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>User clicks Upgrade to Premium</strong><span>Frontend calls POST /billing/create-subscription with the user's JWT</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Backend generates its own subscription_id and calls Cashfree</strong><span>POST /pg/subscriptions with customer + plan details; Cashfree returns a subscription_session_id</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Frontend opens Cashfree's hosted checkout</strong><span>cashfree.subscriptionsCheckout({ subsSessionId, redirectTarget }) — the subscriptions-specific SDK call</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>Customer authorizes the mandate</strong><span>Bank Account / eNACH flow on Cashfree's own page; in sandbox, the built-in Simulator stands in for a real bank</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>Cashfree redirects back via POST</strong><span>A dedicated route.js (not the plain page) accepts the POST and forwards into a normal GET page load</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">6</span><div class="pipeline-body"><strong>Cashfree calls the webhook, possibly more than once</strong><span>Signature verified over timestamp + raw body using the Client Secret; subscription_status read from the real payload shape</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">7</span><div class="pipeline-body"><strong>plan flips to "premium" only once status is truly ACTIVE</strong><span>Not on any event whose name merely contains "AUTH" — a mandate can be authorized-but-pending for a real stretch of time first</span></div></div>
+      </div>
+    </section>
+
+    <section id="concepts">
+      <h2>Key concepts</h2>
+      <div class="grid">
+        <div class="grid-card"><div class="icon">Access control</div><h4>Server-side freemium gating</h4><p>The 5-item cap is enforced on every write in the backend — never trusted from the frontend alone.</p></div>
+        <div class="grid-card"><div class="icon">Debugging</div><h4>Isolating a platform bug</h4><p>Reproducing a failure on a brand-new, untouched account is what proves it isn't your code.</p></div>
+        <div class="grid-card"><div class="icon">SDK</div><h4>checkout() vs. subscriptionsCheckout()</h4><p>Payments and subscriptions are genuinely different SDK calls — the wrong one fails silently.</p></div>
+        <div class="grid-card"><div class="icon">Security</div><h4>Raw-body webhook signatures</h4><p>HMAC verification needs the unparsed request body — re-serialized JSON breaks the signature.</p></div>
+        <div class="grid-card"><div class="icon">Reliability</div><h4>Status, not event name</h4><p>An event firing doesn't mean the state it implies is final — read the actual status field.</p></div>
+        <div class="grid-card"><div class="icon">Ops</div><h4>Push ≠ deploy</h4><p>Auto-deploy can be silently off — the hosting dashboard's live commit is the source of truth.</p></div>
+      </div>
+    </section>
+
+    <section id="bugs">
+      <h2>Bugs, debugged for real</h2>
+      <p>Every one of these was an actual failure hit mid-build, not a scripted lesson.</p>
+      <div class="bug">
+        <span class="label">Razorpay sandbox — platform issue, not a bug to fix</span>
+        <p>Generic checkout failure reproduced identically on a completely fresh account, plan, and keys, straight from Razorpay's own dashboard. Ruled out as fixable here; the gateway was swapped instead.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Wrong Cashfree SDK method</span>
+        <p><code>cashfree.checkout({ subscriptionSessionId })</code> was used — the payments call, not <code>cashfree.subscriptionsCheckout({ subsSessionId })</code>, the subscriptions-specific one. Failed on Cashfree's own page with an invalid-session error, then silently no-op'd after a partial fix.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Service worker intercepting the Cashfree SDK script in dev</span>
+        <p>The cache-first PWA service worker (correct for production) was intercepting fetches for the Cashfree SDK and the app's own JS bundles during <code>npm run dev</code>, matching a browser console warning about a "cross-world service worker resource mismatch." Fixed by registering it production-only and unregistering/clearing it in development.</p>
+      </div>
+      <div class="bug">
+        <span class="label">405 on the payment gateway's return redirect</span>
+        <p>Cashfree posts back to <code>return_url</code> with an HTTP POST; a plain Next.js page only accepts GET. Fixed with a dedicated <code>route.js</code> accepting both methods and forwarding to a normal page load.</p>
+      </div>
+      <div class="bug">
+        <span class="label">SECRET_KEY deleted from Render by accident</span>
+        <p>Lost while swapping the four Razorpay env vars for Cashfree's. Broke every login (JWT signing) while leaving signup unaffected — diagnosed by checking the real HTTP status (500, not a genuine 401) rather than trusting the frontend's generic "Incorrect email or password" text.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Webhook handler reading the wrong JSON path</span>
+        <p>Assumed <code>data.subscription.subscription_id</code>; the real payload nests it under <code>data.subscription_details.subscription_id</code>. 200 responses the whole time — it was silently matching nothing. Found by reading an actual delivered payload from Cashfree's Webhook Logs.</p>
+      </div>
+      <div class="bug">
+        <span class="label">A fix that was committed and pushed, but never actually deployed</span>
+        <p>Render's auto-deploy-on-push was off for this service — the corrected commit sat live-but-unbuilt on GitHub, with the Events tab still showing the previous commit as the running deploy, until a manual "Deploy latest commit" was triggered.</p>
+      </div>
+    </section>
+
+    <section id="deploy">
+      <h2>Deployment</h2>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Piece</th><th>Host</th><th>Root Directory</th><th>Key setting</th></tr>
+          <tr><td>Backend</td><td>Render</td><td><code>project-7-premium-notes/backend</code></td><td><code>uvicorn main:app --host 0.0.0.0 --port $PORT</code>, <code>DATABASE_URL</code> / <code>SECRET_KEY</code> / <code>CASHFREE_CLIENT_ID</code> / <code>CASHFREE_CLIENT_SECRET</code> / <code>CASHFREE_PLAN_ID</code> / <code>CASHFREE_RETURN_URL</code></td></tr>
+          <tr><td>Frontend</td><td>Vercel</td><td><code>project-7-premium-notes/frontend</code></td><td><code>NEXT_PUBLIC_API_URL</code> — no public Cashfree key needed, unlike Razorpay's</td></tr>
+        </table>
+      </div>
+      <p>Verified live end-to-end on the real production URLs with multiple fresh test accounts: signup, free-plan cap enforcement, Upgrade to Premium, Cashfree hosted checkout, mandate authorization, redirect back, webhook delivery, and the plan flipping to Premium with the cap lifted — all confirmed working after the six bugs above were found and fixed.</p>
+    </section>
+
+    <section id="commands">
+      <h2>Commands reference</h2>
+      <pre><code># Backend — one-time setup
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Backend — run locally
+uvicorn main:app --reload
+
+# Frontend — run locally
+npm run dev
+
+# Render start command
+uvicorn main:app --host 0.0.0.0 --port $PORT
+
+# Cashfree webhook signature verification (Python)
+signed_payload = (timestamp + raw_body).encode()
+expected = base64.b64encode(
+    hmac.new(client_secret.encode(), signed_payload, hashlib.sha256).digest()
+).decode()</code></pre>
+    </section>
+
+    <section id="timeline">
+      <h2>Build timeline</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>Forked from Project 5, freemium logic + Razorpay wired up</strong><span>5-item cap, ₹149/month plan, initial Razorpay Subscriptions integration</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Razorpay sandbox ruled out</strong><span>Net Banking/UPI unsupported for subscriptions; generic checkout failure reproduced on a brand-new account, plan, and keys</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Stripe considered, ruled out</strong><span>New India account signups are invite-only per Stripe's own docs</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>Cashfree onboarded and proved out manually</strong><span>Test-mode dashboard access, plan created, full mandate authorization tested via the built-in Simulator, webhook configured</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>Backend + frontend migrated from Razorpay to Cashfree</strong><span>requirements.txt, main.py, schemas.py, layout.js, page.js</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">6</span><div class="pipeline-body"><strong>Local bugs found and fixed</strong><span>Wrong SDK method, service worker intercepting the Cashfree script, POST-redirect 405</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">7</span><div class="pipeline-body"><strong>Deployed, then three more bugs found and fixed</strong><span>SECRET_KEY lost from Render, webhook reading the wrong JSON path, a fix pushed but never actually deployed</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">8</span><div class="pipeline-body"><strong>Verified live end-to-end</strong><span>Multiple fresh test accounts confirmed the full checkout → webhook → Premium flow working in production</span></div></div>
+      </div>
+    </section>
+
+    <footer class="page">Web &amp; App Dev Mentor Track · Project 7 of 10 · 2026-09-04</footer>
+  </main>
+</div>
+</body>
+</html>

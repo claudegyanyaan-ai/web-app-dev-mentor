@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 7 Progress — Premium Notes</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fafafa;
+    padding: 2rem;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #666; margin-bottom: 1.5rem; }
+  .status-badge {
+    display: inline-block;
+    background: #0d9488;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+  ul.checklist { list-style: none; }
+  ul.checklist li {
+    padding: 0.35rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  ul.checklist li::before {
+    content: "✓";
+    color: #0d9488;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+  .meta-item .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.03em; }
+  .meta-item .value { font-size: 1.1rem; font-weight: 600; margin-top: 0.15rem; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .live-link {
+    display: inline-block;
+    background: #1a1a1a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  .live-link:hover { background: #333; text-decoration: none; }
+  .concept-list { list-style: none; }
+  .concept-list li { padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
+  .concept-list li:last-child { border-bottom: none; }
+  .bug-note {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+  }
+  .bug-note + .bug-note { margin-top: 0.6rem; }
+  .arch-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0.75rem 0;
+  }
+  .arch-box {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    color: #0f766e;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+  }
+  .quiz-item { padding: 0.5rem 0; }
+  .quiz-item .q { font-size: 0.92rem; }
+  footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Project 7: Premium Notes (Subscription Billing)</h1>
+  <p class="subtitle">Web &amp; App Dev Mentor Track — status tracker</p>
+  <span class="status-badge">✓ Complete &amp; Deployed</span>
+
+  <div class="card">
+    <h2>At a glance</h2>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="label">Started</div>
+        <div class="value">2026-09-02</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Completed</div>
+        <div class="value">2026-09-04</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Stack</div>
+        <div class="value">Next.js PWA / FastAPI / Postgres / Cashfree</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">New this project</div>
+        <div class="value">Subscription billing, freemium gating, webhooks</div>
+      </div>
+    </div>
+    <div class="arch-row">
+      <span class="arch-box">Next.js PWA (Vercel)</span> → <span class="arch-box">FastAPI + JWT (Render)</span> → <span class="arch-box">Postgres (Neon)</span> → <span class="arch-box">Cashfree Subscriptions</span>
+    </div>
+    <a class="live-link" href="https://web-app-dev-mentor-uwgt.vercel.app/" target="_blank">Visit Live App →</a>
+    <a class="live-link" href="https://premium-notes-backend.onrender.com/docs" target="_blank">Backend API Docs →</a>
+  </div>
+
+  <div class="card">
+    <h2>Build checklist</h2>
+    <ul class="checklist">
+      <li>Forked from Project 5's auth-enabled Tasks &amp; Notes PWA</li>
+      <li>Todoist-style freemium gating — 5-item cap (tasks + notes combined) enforced server-side on every write</li>
+      <li>₹149/month Premium plan, INR pricing throughout</li>
+      <li>Payment gateway swapped mid-project from Razorpay to Cashfree, after conclusively reproducing a Razorpay sandbox platform bug on a completely fresh account (Stripe considered and ruled out — new India signups are invite-only)</li>
+      <li>Cashfree Subscriptions API: self-generated subscription_id, plan creation, subscription_session_id checkout flow</li>
+      <li>Cashfree JS SDK v3 (subscriptionsCheckout, not the plain payments checkout call)</li>
+      <li>Webhook endpoint with HMAC-SHA256 signature verification (timestamp + raw body, signed with the Client Secret)</li>
+      <li>Plan upgrade driven entirely by the webhook's real subscription_status ("ACTIVE"), not by event-type name matching</li>
+      <li>Existing razorpay_subscription_id DB column deliberately reused (not renamed) to store the Cashfree subscription ID, avoiding a schema migration</li>
+      <li>Deployed as two services — backend to Render, frontend to Vercel — verified live end-to-end with multiple real test accounts</li>
+    </ul>
+    <div class="bug-note">
+      <strong>Not a bug, a platform issue — Razorpay sandbox:</strong> "We are facing some
+      trouble completing your request" reproduced identically on a brand-new account, plan,
+      and keys, straight from Razorpay's own dashboard checkout. Conclusively ruled out as
+      anything fixable in this project's code; the gateway was swapped instead of debugged
+      further.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — wrong Cashfree SDK method:</strong> <code>cashfree.checkout()</code>
+      (payments) was used for a subscription session instead of
+      <code>cashfree.subscriptionsCheckout()</code> — silently did nothing instead of erroring.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — service worker intercepting the Cashfree script in dev:</strong> the
+      cache-first PWA service worker (fine in production) was serving stale/mismatched
+      responses for the Cashfree SDK during <code>npm run dev</code>. Fixed by registering it
+      production-only, and actively unregistering/clearing it in development.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — 405 on the payment gateway's return redirect:</strong> Cashfree
+      redirects back to <code>return_url</code> with a POST, not a GET; a plain Next.js page
+      only accepts GET. Added a small route that accepts both and forwards into a normal page
+      load.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — <code>SECRET_KEY</code> deleted from Render by accident:</strong>
+      lost while swapping Razorpay env vars for Cashfree ones — broke every login (JWT signing)
+      while leaving signup unaffected. Diagnosed by checking the real HTTP status code (500,
+      not a genuine 401) rather than trusting the frontend's generic error text.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — webhook reading the wrong JSON path:</strong> the handler assumed
+      <code>data.subscription.subscription_id</code>; the real payload nests it under
+      <code>data.subscription_details.subscription_id</code>. Found by pulling an actual
+      delivered payload from Cashfree's Webhook Logs rather than guessing from docs.
+    </div>
+    <div class="bug-note">
+      <strong>Bug fixed — a pushed fix that was never actually deployed:</strong> Render's
+      auto-deploy-on-push was off for this service; the corrected commit sat live-but-unbuilt
+      on GitHub until a manual "Deploy latest commit" was triggered.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Concepts introduced</h2>
+    <p style="margin-bottom:0.75rem; color:#555;">Full plain-English explanations in <a href="CONCEPTS.md">CONCEPTS.md</a>. Summary:</p>
+    <ul class="concept-list">
+      <li>Server-side freemium gating — never trust a client-side item-count check</li>
+      <li>What a subscription mandate actually authorizes, vs. a one-time payment</li>
+      <li>Recognizing a platform bug (vs. your own code) by reproducing it in isolation</li>
+      <li>Cashfree's create-subscription → subscription_session_id → hosted checkout flow</li>
+      <li>Payments checkout vs. subscriptions checkout as genuinely separate SDK calls</li>
+      <li>Webhook signature verification over the raw request body, not re-serialized JSON</li>
+      <li>Never trust a webhook payload's shape without reading a real delivered one</li>
+      <li>An event firing isn't the same as the state it implies being final</li>
+      <li>git push ≠ deployed — auto-deploy can be off with no obvious signal</li>
+      <li>Reusing an existing DB column across a provider swap to avoid a schema migration</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Checkpoint quiz</h2>
+    <div class="quiz-item"><div class="q">1. Why was the free-plan item cap enforced in the backend instead of just hiding the "Add" button on the frontend once 5 items are reached?</div></div>
+    <div class="quiz-item"><div class="q">2. What made the Razorpay failure a "platform bug, not our bug," rather than something to keep debugging?</div></div>
+    <div class="quiz-item"><div class="q">3. Why did calling the Cashfree SDK's checkout() method with a subscription session ID fail silently instead of throwing a clear error?</div></div>
+    <div class="quiz-item"><div class="q">4. Why does webhook signature verification need the raw, unparsed request body instead of the parsed-then-reserialized JSON?</div></div>
+    <div class="quiz-item"><div class="q">5. Why was a subscription_status of "ACTIVE" used to grant Premium, instead of just reacting to any event whose name contains "AUTH"?</div></div>
+    <div class="quiz-item"><div class="q">6. A code fix was committed and pushed to GitHub, but the bug persisted identically afterward — what turned out to be true, and how was it confirmed?</div></div>
+    <p style="color:#888; font-size:0.9rem; margin-top:0.5rem;">Answered verbally in the mentoring session — see debrief.</p>
+  </div>
+
+  <div class="card">
+    <h2>What you could break/change next</h2>
+    <ul class="checklist">
+      <li>Handle the webhook's failure-path events (AUTH_FAILED, CANCELLED, payment failure) against real payloads, not assumptions</li>
+      <li>Add a "Manage subscription" / cancel flow instead of only ever upgrading</li>
+      <li>Show a pending/processing state in the UI while a subscription is Bank Approval Pending, instead of it looking identical to Free</li>
+      <li>Formally close the two now-unused Razorpay test accounts</li>
+      <li>Switch Cashfree to live/production keys and a real bank mandate before charging real users</li>
+    </ul>
+  </div>
+
+  <footer>Web &amp; App Dev Mentor Track · Project 7 of 10 · Last updated 2026-09-04</footer>
+</div>
+</body>
+</html>

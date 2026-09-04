@@ -19,7 +19,7 @@ See `progress-dashboard.html` (open in a browser) for the master status tracker 
 - [ ] Project 4: Full-stack CRUD app (Next.js + FastAPI + Postgres)
 - [ ] Project 5: Auth-enabled app + first PWA packaging
 - [ ] Project 6: Real-time feature app
-- [ ] Project 7: Payments-enabled app (Stripe test mode)
+- [x] Project 7: Premium Notes — payments-enabled app (Cashfree subscriptions, INR)
 - [ ] Project 8: Mini EdTech platform
 - [ ] Project 9: Flagship 1 — Education platform
 - [ ] Project 10: Flagship 2 — Stock trading / screener app
