@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini EdTech Platform Anatomy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f7f9fc;
+    --surface: #ffffff;
+    --surface-2: #eef2f8;
+    --border: #d9e0ea;
+    --text: #19202b;
+    --text-dim: #5c6878;
+    --accent: #2563eb;
+    --accent-soft: #e8f0fe;
+    --accent-text: #1d4ed8;
+    --warn: #a35a1e;
+    --warn-soft: #fbeee0;
+    --code-bg: #19202b;
+    --code-text: #e9edf4;
+    --shadow: 0 1px 2px rgba(25,32,43,0.06), 0 8px 24px rgba(25,32,43,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11151c;
+      --surface: #171c25;
+      --surface-2: #1e2531;
+      --border: #2b3341;
+      --text: #e7ecf4;
+      --text-dim: #9aa6b8;
+      --accent: #6d9bff;
+      --accent-soft: #1b2740;
+      --accent-text: #9cbcff;
+      --warn: #e0a25c;
+      --warn-soft: #3a2c18;
+      --code-bg: #0c0f14;
+      --code-text: #e7ecf4;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11151c;
+    --surface: #171c25;
+    --surface-2: #1e2531;
+    --border: #2b3341;
+    --text: #e7ecf4;
+    --text-dim: #9aa6b8;
+    --accent: #6d9bff;
+    --accent-soft: #1b2740;
+    --accent-text: #9cbcff;
+    --warn: #e0a25c;
+    --warn-soft: #3a2c18;
+    --code-bg: #0c0f14;
+    --code-text: #e7ecf4;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-text); }
+
+  .shell { display: flex; max-width: 1180px; margin: 0 auto; }
+
+  nav.toc {
+    width: 240px;
+    flex-shrink: 0;
+    padding: 3rem 1.5rem 3rem 2rem;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav.toc .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; margin-bottom: 0.65rem; }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    display: flex;
+    gap: 0.55rem;
+  }
+  nav.toc a:hover { color: var(--accent-text); }
+  nav.toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  main { flex: 1; min-width: 0; padding: 3.5rem 2.5rem 6rem; }
+
+  header.hero { margin-bottom: 3rem; }
+  .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 3px;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    line-height: 1.12;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .dek {
+    font-size: 1.08rem;
+    color: var(--text-dim);
+    max-width: 62ch;
+    line-height: 1.55;
+  }
+  .stackline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+  .stackline .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.32rem 0.7rem;
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+  }
+  .stackline .arrow { color: var(--text-dim); }
+
+  section { margin-bottom: 3.25rem; scroll-margin-top: 2rem; }
+  h2 {
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 1.5rem 0 0.6rem;
+  }
+  p { line-height: 1.7; max-width: 68ch; }
+  p + p { margin-top: 0.9rem; }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 1.1rem 1.3rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    box-shadow: var(--shadow);
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2rem 1.5rem;
+    box-shadow: var(--shadow);
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .arch-row { display: flex; align-items: stretch; gap: 0; min-width: 720px; }
+  .arch-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem 1.2rem;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent-soft);
+  }
+  .arch-node .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .arch-node .name { font-weight: 700; font-size: 1rem; }
+  .arch-node .host { font-size: 0.8rem; color: var(--text-dim); }
+  .arch-connector {
+    flex-shrink: 0;
+    width: 92px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .arch-connector .glyph { font-size: 1.3rem; color: var(--accent); }
+
+  .pipeline { display: flex; flex-direction: column; gap: 0; margin: 1.5rem 0; }
+  .pipeline-step {
+    display: flex;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pipeline-step:last-child { border-bottom: none; }
+  .pipeline-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+  }
+  .pipeline-body strong { display: block; margin-bottom: 0.2rem; }
+  .pipeline-body span { font-size: 0.9rem; color: var(--text-dim); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .grid-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .grid-card .icon { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .grid-card h4 { margin: 0 0 0.35rem; font-size: 0.98rem; font-family: 'IBM Plex Sans', sans-serif; }
+  .grid-card p { font-size: 0.87rem; margin: 0; color: var(--text-dim); max-width: none; }
+
+  .bug {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    border-radius: 8px;
+    padding: 1.1rem 1.3rem;
+    margin: 1rem 0;
+  }
+  .bug .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--warn);
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  .bug p { margin: 0; max-width: none; font-size: 0.92rem; }
+
+  .tablewrap { overflow-x: auto; margin: 1.5rem 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--border); }
+  th { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.82em; }
+
+  footer.page {
+    max-width: 68ch;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 860px) {
+    nav.toc { display: none; }
+    main { padding: 2rem 1.25rem 4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="toc">
+    <div class="eyebrow">Project 8 · Contents</div>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#roles">Roles &amp; access control</a></li>
+      <li><a href="#schema">Data model</a></li>
+      <li><a href="#flow">Enrollment &amp; progress flow</a></li>
+      <li><a href="#quizzes">Quiz grading &amp; answer-hiding</a></li>
+      <li><a href="#concepts">Key concepts</a></li>
+      <li><a href="#bugs">Bugs, debugged for real</a></li>
+      <li><a href="#deploy">Deployment</a></li>
+      <li><a href="#commands">Commands reference</a></li>
+      <li><a href="#timeline">Build timeline</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <span class="kicker">Project 8 of 10 · Anatomy</span>
+      <h1>Mini EdTech Platform</h1>
+      <p class="dek">A rehearsal for Project 9's flagship education platform: an admin role that creates courses, lessons, and multiple-choice quizzes through a real UI (not database seeding), and a student role that enrolls, works through lessons, tracks progress, and takes quizzes with unlimited retakes.</p>
+      <div class="stackline">
+        <span class="pill">Next.js PWA</span><span class="arrow">→</span>
+        <span class="pill">FastAPI + JWT + role check</span><span class="arrow">→</span>
+        <span class="pill">Postgres</span>
+        <span class="arrow" style="margin-left:0.5rem;">·</span>
+        <span class="pill">Vercel</span><span class="arrow">+</span><span class="pill">Render</span><span class="arrow">+</span><span class="pill">Neon</span>
+      </div>
+    </header>
+
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Every prior project in this track had exactly one kind of user. Project 8's job was to introduce a second kind — an admin role with real authoring power over content — without that becoming a security hole a student could route around. The scope: admin creates courses and lessons (text plus embedded video) and multiple-choice quizzes; students browse, enroll, mark lessons complete, see a per-course progress bar, and take quizzes with full attempt history. The first admin account itself has no self-service signup path — it's promoted by hand with a direct SQL update, which is the normal way to bootstrap the first privileged account in a system like this.</p>
+      <p>What made this project genuinely different from a CRUD app with two roles bolted on was that almost every feature had a second, invisible requirement sitting underneath it: progress only means something once enrollment exists to gate it, and a quiz endpoint only works correctly once it's actively hiding information from exactly one of its two audiences.</p>
+    </section>
+
+    <section id="architecture">
+      <h2>Architecture</h2>
+      <div class="arch-diagram">
+        <div class="arch-row">
+          <div class="arch-node">
+            <span class="tag">Tier 1 — PWA client</span>
+            <span class="name">Next.js frontend (admin + student views)</span>
+            <span class="host">Vercel</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">⇄</span>REST +<br>Bearer token</div>
+          <div class="arch-node">
+            <span class="tag">Tier 2 — API + role gate</span>
+            <span class="name">FastAPI + JWT + require_admin()</span>
+            <span class="host">Render</span>
+          </div>
+          <div class="arch-connector"><span class="glyph">→</span>SQLAlchemy<br>ORM</div>
+          <div class="arch-node">
+            <span class="tag">Tier 3 — durable data</span>
+            <span class="name">Postgres (courses, lessons, quizzes, enrollments)</span>
+            <span class="host">Neon</span>
+          </div>
+        </div>
+      </div>
+      <p>Same three-tier shape as every project since Project 4. What's new sits entirely inside Tier 2: the same API now serves two structurally different experiences off the same endpoints, decided by the caller's role rather than by which URL they hit.</p>
+    </section>
+
+    <section id="roles">
+      <h2>Roles &amp; access control</h2>
+      <p>A single <code>role</code> column on <code>User</code> (<code>"student"</code> or <code>"admin"</code>) backs everything. <code>require_admin()</code> is a FastAPI dependency chained directly off the existing <code>get_current_user()</code> — it reuses the JWT-decoding logic from every prior project and simply adds one check: if <code>current_user.role != "admin"</code>, raise a 403 before the route body ever runs. Every course/lesson/quiz create, update, and delete endpoint depends on <code>require_admin()</code>; every browsing, enrollment, and quiz-taking endpoint depends on the plain <code>get_current_user()</code>. The frontend also redirects by role after login (admin → <code>/admin</code>, student → <code>/student</code>), but that redirect is a convenience, not the actual security boundary — the backend dependency is.</p>
+    </section>
+
+    <section id="schema">
+      <h2>Data model</h2>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Table</th><th>Key columns / relationships</th><th>Purpose</th></tr>
+          <tr><td><code>users</code></td><td><code>role</code></td><td><code>"student"</code> or <code>"admin"</code> — read by every <code>require_admin()</code> check</td></tr>
+          <tr><td><code>courses</code></td><td><code>lessons</code>, <code>quizzes</code> (both back_populates relationships)</td><td>The Course↔Quiz side was missing initially — added for cascade-delete and <code>course.quizzes</code> access</td></tr>
+          <tr><td><code>lessons</code></td><td><code>course_id</code>, text/video content</td><td>Belongs to one course; lesson order matters for the student-facing list</td></tr>
+          <tr><td><code>quizzes</code> / <code>questions</code> / <code>options</code></td><td><code>is_correct</code> on <code>options</code></td><td>Stored once; which schema an endpoint returns controls whether this field ever leaves the server</td></tr>
+          <tr><td><code>course_enrollments</code></td><td><code>user_id</code>, <code>course_id</code></td><td>The actual gate — must exist before <code>LessonCompletion</code> rows can be written for that course</td></tr>
+          <tr><td><code>lesson_completions</code></td><td><code>user_id</code>, <code>lesson_id</code></td><td>One row per completed lesson; idempotent — re-marking complete doesn't duplicate it</td></tr>
+          <tr><td><code>quiz_attempts</code></td><td><code>user_id</code>, <code>quiz_id</code>, <code>score</code></td><td>One row per attempt — unlimited retakes, full history kept, never overwritten</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="flow">
+      <h2>Enrollment &amp; progress flow</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>Student browses courses</strong><span>GET /courses — public to any logged-in student, no enrollment required to view the catalog</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Student enrolls</strong><span>POST /courses/{id}/enroll — creates a CourseEnrollment row; a second enroll attempt is blocked (400)</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Student marks a lesson complete</strong><span>POST /lessons/{id}/complete — 403 if no enrollment exists for that lesson's course; otherwise idempotently records (or confirms) a LessonCompletion</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>Progress bar renders</strong><span>GET /courses/{id}/progress — percent_complete plus the exact completed_lesson_ids, so the frontend can checkmark individual lessons, not just show a percentage</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>Student takes a quiz</strong><span>POST /quizzes/{id}/submit — graded entirely server-side against the stored is_correct values; score recorded as a new QuizAttempt, old attempts never overwritten</span></div></div>
+      </div>
+    </section>
+
+    <section id="quizzes">
+      <h2>Quiz grading &amp; answer-hiding</h2>
+      <p>One <code>Quiz</code>/<code>Question</code>/<code>Option</code> model backs both roles. Two separate Pydantic response schemas control what actually leaves the server for each: <code>QuizOut</code> (student-facing — questions and options, no <code>is_correct</code> anywhere in the payload) and <code>QuizAdminOut</code> (admin-facing — everything, including which option is correct, needed so the edit page can prefill the current answers). <code>GET /quizzes/{id}</code> always returns <code>QuizOut</code>; the separate admin-only <code>GET /admin/quizzes/{id}</code> is the only route that ever returns <code>QuizAdminOut</code>, and it sits behind <code>require_admin()</code>. Submitting an attempt (<code>POST /quizzes/{id}/submit</code>) takes the student's chosen option IDs, looks up the real <code>is_correct</code> values server-side, computes the score, and only then writes a <code>QuizAttempt</code> row — the client never calculates or can influence its own score.</p>
+    </section>
+
+    <section id="concepts">
+      <h2>Key concepts</h2>
+      <div class="grid">
+        <div class="grid-card"><div class="icon">Access control</div><h4>require_admin() as a chained dependency</h4><p>Reuses JWT decoding from get_current_user(); adds one role check before the route body runs.</p></div>
+        <div class="grid-card"><div class="icon">API design</div><h4>Hiding data is a schema problem</h4><p>QuizOut vs. QuizAdminOut control what leaves the server — not what the frontend chooses to render.</p></div>
+        <div class="grid-card"><div class="icon">ORM</div><h4>A missing relationship fails silently</h4><p>No crash when Course↔Quiz was absent — just a feature that couldn't be built later.</p></div>
+        <div class="grid-card"><div class="icon">Authorization</div><h4>Enrollment as a real gate</h4><p>Not just a record — the actual check POST /lessons/{id}/complete makes before writing anything.</p></div>
+        <div class="grid-card"><div class="icon">Reliability</div><h4>Idempotent writes</h4><p>Re-marking a lesson complete is safe to repeat — it doesn't double-count progress.</p></div>
+        <div class="grid-card"><div class="icon">PWA</div><h4>Service worker scope is per-origin</h4><p>An old project's service worker on the same port can silently hijack a brand-new one.</p></div>
+      </div>
+    </section>
+
+    <section id="bugs">
+      <h2>Bugs, debugged for real</h2>
+      <p>Every one of these was an actual failure hit mid-build, not a scripted lesson.</p>
+      <div class="bug">
+        <span class="label">Missing Course↔Quiz relationship</span>
+        <p>Never added when <code>Quiz</code> was first modeled alongside <code>Course</code>/<code>Lesson</code>. Nothing crashed — <code>course.quizzes</code> just wasn't accessible, and deleting a course left its quizzes orphaned instead of cascading. Fixed with a proper two-sided <code>back_populates</code> relationship once the quiz-builder UI needed to list a course's quizzes.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Leftover service worker from Projects 5/6/7 hijacking localhost:3000</span>
+        <p>Made a brand-new Project 8 admin page render as plain unstyled text and login silently do nothing — a service worker's scope is the browser origin, not any one project. Confirmed via DevTools Network tab showing <code>(ServiceWorker)</code> as the Initiator for every single request. Fixed via Application → Service Workers → Unregister, then Application → Storage → Clear site data, then a fresh tab.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Relative import path-depth miscount</span>
+        <p><code>app/admin/courses/[id]/quizzes/new/page.js</code> used 5 <code>../</code> to reach <code>lib/api.js</code> but needed 6 — one folder deeper than the sibling quiz-edit page, which got its own path count right. Caused a real "Module not found" Turbopack build error live during testing. Fixed, then verified by resolving the path against the actual file on disk.</p>
+      </div>
+      <div class="bug">
+        <span class="label">git push failing from the device-bridge sandbox</span>
+        <p>Expected, not a real bug: the sandbox has no stored GitHub credentials by design. The final commit had to be pushed from the user's own Terminal, where real credentials live — same as every prior deploy in this track.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Render's "Add from .env" paste not parsing correctly</span>
+        <p>Pasting the full <code>.env</code> file content dropped the entire <code>DATABASE_URL=postgresql://...</code> line into the KEY field as one string instead of splitting it into key and value. Worked around by adding <code>DATABASE_URL</code> and <code>SECRET_KEY</code> as two separate, manually-typed rows instead.</p>
+      </div>
+      <div class="bug">
+        <span class="label">CORS blocking the real deployed frontend</span>
+        <p>Backend's <code>allow_origins</code> only listed <code>localhost:3000</code> and <code>"null"</code>. The live Vercel app failed every request with "Failed to fetch" — not a broken backend, just a backend correctly rejecting a browser origin it didn't recognize. Fixed by adding the exact deployed Vercel URL to <code>allow_origins</code>.</p>
+      </div>
+      <div class="bug">
+        <span class="label">Render not auto-redeploying immediately after the CORS-fix push</span>
+        <p>Same class of issue hit in Project 7: a push reaching GitHub doesn't guarantee an immediate redeploy. Resolved with a manual "Deploy latest commit" from the Render dashboard; worth checking the Auto-Deploy setting going forward.</p>
+      </div>
+    </section>
+
+    <section id="deploy">
+      <h2>Deployment</h2>
+      <div class="tablewrap">
+        <table>
+          <tr><th>Piece</th><th>Host</th><th>Root Directory</th><th>Key setting</th></tr>
+          <tr><td>Backend</td><td>Render</td><td><code>project-8-edtech/backend</code></td><td><code>uvicorn main:app --host 0.0.0.0 --port $PORT</code>, <code>DATABASE_URL</code> / <code>SECRET_KEY</code></td></tr>
+          <tr><td>Frontend</td><td>Vercel</td><td><code>project-8-edtech/frontend</code></td><td><code>NEXT_PUBLIC_API_URL</code> — imported via "Import single project" on the frontend card, since Root Directory also detected the backend as a second app</td></tr>
+        </table>
+      </div>
+      <p>Verified live end-to-end on the real production URLs: signup/login with role-based redirect, admin course/lesson/quiz authoring, student enrollment, lesson completion with a live progress bar, and quiz-taking with score + retake + attempt history — all confirmed working after the bugs above were found and fixed.</p>
+    </section>
+
+    <section id="commands">
+      <h2>Commands reference</h2>
+      <pre><code># Backend — one-time setup
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Backend — run locally
+uvicorn main:app --reload
+
+# Frontend — scaffold without baking in sandbox-native binaries
+npx create-next-app@latest frontend --skip-install
+
+# Frontend — run locally (on your own machine, after npm install)
+npm install
+npm run dev
+
+# Render start command
+uvicorn main:app --host 0.0.0.0 --port $PORT
+
+# Promote the first admin (run once, directly in Neon's SQL editor)
+UPDATE users SET role = 'admin' WHERE email = 'you@example.com';</code></pre>
+    </section>
+
+    <section id="timeline">
+      <h2>Build timeline</h2>
+      <div class="pipeline">
+        <div class="pipeline-step"><span class="pipeline-num">1</span><div class="pipeline-body"><strong>Scoped and backend auth scaffold built</strong><span>User.role column, require_admin() dependency, first admin promoted via direct SQL</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">2</span><div class="pipeline-body"><strong>Course/lesson admin CRUD + student browsing</strong><span>Backend endpoints built and integration-tested</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">3</span><div class="pipeline-body"><strong>Quiz admin CRUD + student take/grade</strong><span>is_correct hidden from student-facing schema from the start, verified via TestClient</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">4</span><div class="pipeline-body"><strong>Enrollment + progress backend</strong><span>CourseEnrollment, LessonCompletion, /courses/{id}/progress — 10 TestClient checks, all passed</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">5</span><div class="pipeline-body"><strong>Frontend scaffold + auth</strong><span>create-next-app --skip-install, login/signup, role-based redirect — verified by the user</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">6</span><div class="pipeline-body"><strong>Admin course/lesson UI built, then the service worker incident</strong><span>Hit and resolved the leftover-service-worker hijack from Projects 5/6/7</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">7</span><div class="pipeline-body"><strong>Admin quiz builder UI</strong><span>Added the missing Course↔Quiz relationship, fixed the import path-depth bug, confirmed working</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">8</span><div class="pipeline-body"><strong>Student course browsing, progress bar, lesson completion</strong><span>completed_lesson_ids added to the progress endpoint — 3 TestClient checks, all passed</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">9</span><div class="pipeline-body"><strong>Student quiz-taking UI</strong><span>Score, retake, and attempt history — no backend changes needed</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">10</span><div class="pipeline-body"><strong>PWA packaging + deployment</strong><span>Render backend, Vercel frontend, Neon database; fixed the .env paste glitch, the CORS gap, and the Render auto-deploy delay</span></div></div>
+        <div class="pipeline-step"><span class="pipeline-num">11</span><div class="pipeline-body"><strong>Verified live end-to-end</strong><span>Signup through role-based redirect, enrollment, progress tracking, and quiz-taking all confirmed working in production</span></div></div>
+      </div>
+    </section>
+
+    <footer class="page">Web &amp; App Dev Mentor Track · Project 8 of 10 · 2026-11-01</footer>
+  </main>
+</div>
+</body>
+</html>
