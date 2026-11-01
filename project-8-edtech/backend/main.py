@@ -14,7 +14,7 @@ app = FastAPI(title="Project 8 - Mini EdTech Platform")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "null"],
+    allow_origins=["http://localhost:3000", "null", "https://web-app-dev-mentor-5dmc.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
